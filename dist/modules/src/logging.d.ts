@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { EventEmitter, type EventListenerOptions } from './misc';
+import { type EventListenerOptions } from './misc.js';
 /**
  * Controls how much information Mediabunny prints to the console. Higher levels include all lower levels.
  *
@@ -48,22 +48,10 @@ export type LoggingEvents = {
  */
 export declare class Logging {
     private constructor();
-    /** @internal */
-    static _level: LogLevel;
-    /** @internal */
-    static _emitterInstance: EventEmitter<LoggingEvents> | null;
     /** The current log level. Defaults to {@link LogLevel.Info}. */
     static get level(): LogLevel;
     static set level(value: LogLevel);
-    /** @internal */
-    static get _emitter(): EventEmitter<LoggingEvents>;
     /** Registers a listener for a log event. Returns a function that, when called, removes the listener again. */
     static on<K extends keyof LoggingEvents>(event: K, listener: (data: LoggingEvents[K]) => unknown, options?: EventListenerOptions): () => void;
-    /** @internal */
-    static _error(...args: unknown[]): void;
-    /** @internal */
-    static _warn(...args: unknown[]): void;
-    /** @internal */
-    static _info(...args: unknown[]): void;
 }
 //# sourceMappingURL=logging.d.ts.map

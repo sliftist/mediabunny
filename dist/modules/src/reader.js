@@ -5,9 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { InputDisposedError } from './input';
-import { assert, clamp, getUint24, textDecoder, toDataView } from './misc';
-import { DEFAULT_MAX_READ_POSITION, DEFAULT_MIN_READ_POSITION } from './source';
+import { InputDisposedError } from './input.js';
+import { assert, clamp, getUint24, textDecoder, toDataView } from './misc.js';
+import { DEFAULT_MAX_READ_POSITION, DEFAULT_MIN_READ_POSITION } from './source.js';
 export class Reader {
     constructor(source) {
         this.source = source;

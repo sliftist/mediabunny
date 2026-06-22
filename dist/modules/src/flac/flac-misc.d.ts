@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { FileSlice } from '../reader';
+import { FileSlice } from '../reader.js';
 type BlockSizeOrUncommon = number | 'uncommon-u16' | 'uncommon-u8';
 type SampleRateOrUncommon = number | 'uncommon-u8' | 'uncommon-u16' | 'uncommon-u16-10';
 export declare const getBlockSizeOrUncommon: (bits: number) => BlockSizeOrUncommon | null;

@@ -5,11 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AVC_LEVEL_TABLE, VP9_LEVEL_TABLE } from './codec';
-import { assert, assertNever, base64ToBytes, bytesToBase64, keyValueIterator, getUint24, last, readExpGolomb, readSignedExpGolomb, textDecoder, textEncoder, toDataView, toUint8Array, getChromiumVersion, isChromium, setUint24, } from './misc';
-import { Logging } from './logging';
-import { AC3_SAMPLE_RATES, EAC3_REDUCED_SAMPLE_RATES } from '../shared/ac3-misc';
-import { Bitstream } from '../shared/bitstream';
+import { AVC_LEVEL_TABLE, VP9_LEVEL_TABLE } from './codec.js';
+import { assert, assertNever, base64ToBytes, bytesToBase64, keyValueIterator, getUint24, last, readExpGolomb, readSignedExpGolomb, textDecoder, textEncoder, toDataView, toUint8Array, getChromiumVersion, isChromium, setUint24, } from './misc.js';
+import { Logging } from './logging.js';
+import { AC3_SAMPLE_RATES, EAC3_REDUCED_SAMPLE_RATES } from '../shared/ac3-misc.js';
+import { Bitstream } from '../shared/bitstream.js';
 // References for AVC/HEVC code:
 // ISO 14496-15
 // Rec. ITU-T H.264

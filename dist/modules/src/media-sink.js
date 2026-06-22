@@ -5,16 +5,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { parsePcmCodec, PCM_AUDIO_CODECS } from './codec';
-import { AvcNalUnitType, concatAvcNalUnits, deserializeAvcDecoderConfigurationRecord, determineVideoPacketType, extractNalUnitTypeForAvc, extractNalUnitTypeForHevc, HevcNalUnitType, iterateAvcNalUnits, iterateHevcNalUnits, parseAvcSps, sanitizeHevcPacketForChromium, } from './codec-data';
-import { customVideoDecoders, customAudioDecoders } from './custom-coder';
-import { InputDisposedError } from './input';
-import { InputAudioTrack, InputTrack, InputVideoTrack } from './input-track';
-import { assert, assertNever, CallSerializer, getInt24, getUint24, insertSorted, isChromium, isFirefox, isNumber, isWebKit, last, mapAsyncGenerator, promiseWithResolvers, toAsyncIterator, toDataView, toUint8Array, validateAnyIterable, } from './misc';
-import { EncodedPacket } from './packet';
-import { fromAlaw, fromUlaw } from './pcm';
-import { AudioSample, clampCropRectangle, validateCropRectangle, VideoSample, } from './sample';
-import { Logging } from './logging';
+import { parsePcmCodec, PCM_AUDIO_CODECS } from './codec.js';
+import { AvcNalUnitType, concatAvcNalUnits, deserializeAvcDecoderConfigurationRecord, determineVideoPacketType, extractNalUnitTypeForAvc, extractNalUnitTypeForHevc, HevcNalUnitType, iterateAvcNalUnits, iterateHevcNalUnits, parseAvcSps, sanitizeHevcPacketForChromium, } from './codec-data.js';
+import { customVideoDecoders, customAudioDecoders } from './custom-coder.js';
+import { InputDisposedError } from './input.js';
+import { InputAudioTrack, InputTrack, InputVideoTrack } from './input-track.js';
+import { assert, assertNever, CallSerializer, getInt24, getUint24, insertSorted, isChromium, isFirefox, isNumber, isWebKit, last, mapAsyncGenerator, promiseWithResolvers, toAsyncIterator, toDataView, toUint8Array, validateAnyIterable, } from './misc.js';
+import { EncodedPacket } from './packet.js';
+import { fromAlaw, fromUlaw } from './pcm.js';
+import { AudioSample, clampCropRectangle, validateCropRectangle, VideoSample, } from './sample.js';
+import { Logging } from './logging.js';
 const validatePacketRetrievalOptions = (options) => {
     if (!options || typeof options !== 'object') {
         throw new TypeError('options must be an object.');

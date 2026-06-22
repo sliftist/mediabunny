@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Muxer } from '../muxer';
-import { Output, OutputAudioTrack } from '../output';
-import { EncodedPacket } from '../packet';
-import { WavOutputFormat } from '../output-format';
+import { Muxer } from '../muxer.js';
+import { Output, OutputAudioTrack } from '../output.js';
+import { EncodedPacket } from '../packet.js';
+import { WavOutputFormat } from '../output-format.js';
 export declare class WaveMuxer extends Muxer {
     private format;
     private isRf64;

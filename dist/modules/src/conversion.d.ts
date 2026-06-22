@@ -5,15 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AudioCodec, VideoCodec } from './codec';
-import { Quality } from './encode';
-import { Input } from './input';
-import { InputAudioTrack, InputTrack, InputVideoTrack } from './input-track';
-import { AudioSampleSource } from './media-source';
-import { MaybePromise, Rotation } from './misc';
-import { Output, OutputTrackGroup, TrackType } from './output';
-import { AudioSample, CropRectangle, VideoSample, VideoSampleResource } from './sample';
-import { MetadataTags } from './metadata';
+import { AudioCodec, VideoCodec } from './codec.js';
+import { Quality } from './encode.js';
+import { Input } from './input.js';
+import { InputAudioTrack, InputTrack, InputVideoTrack } from './input-track.js';
+import { MaybePromise, Rotation } from './misc.js';
+import { Output, OutputTrackGroup } from './output.js';
+import { AudioSample, CropRectangle, VideoSample, VideoSampleResource } from './sample.js';
+import { MetadataTags } from './metadata.js';
 /**
  * The options for media file conversion.
  * @group Conversion
@@ -282,38 +281,6 @@ export declare class Conversion {
     readonly input: Input;
     /** The output file. */
     readonly output: Output;
-    /** @internal */
-    _options: ConversionOptions;
-    /** @internal */
-    _startTimestamp: number;
-    /** @internal */
-    _endTimestamp: number;
-    /** @internal */
-    _addedCounts: Record<TrackType, number>;
-    /** @internal */
-    _totalTrackCount: number;
-    /** @internal */
-    _nextOutputTrackId: number;
-    /** @internal */
-    _outputTrackIds: number[];
-    /** @internal */
-    _outputOwnTrackGroups: (OutputTrackGroup | null)[];
-    /** @internal */
-    _trackPromises: Promise<void>[];
-    /** @internal */
-    _started: Promise<void>;
-    /** @internal */
-    _start: () => void;
-    /** @internal */
-    _executed: boolean;
-    /** @internal */
-    _synchronizer: TrackSynchronizer;
-    /** @internal */
-    _totalDuration: number | null;
-    /** @internal */
-    _maxTimestamps: Map<number, number>;
-    /** @internal */
-    _canceled: boolean;
     /**
      * A callback that is fired whenever the conversion progresses. Gets passed as first argument a number between
      * 0 and 1, indicating the completion of the conversion. Note that a progress of 1 doesn't necessarily mean the
@@ -324,10 +291,6 @@ export declare class Conversion {
      * In order for progress to be computed, this property must be set before `execute` is called.
      */
     onProgress?: (progress: number, processedTime: number) => unknown;
-    /** @internal */
-    _computeProgress: boolean;
-    /** @internal */
-    _lastProgress: number;
     /**
      * Whether this conversion, as it has been configured, is valid and can be executed. If this field is `false`, check
      * the `discardedTracks` field for reasons.
@@ -347,10 +310,6 @@ export declare class Conversion {
     static init(options: ConversionOptions): Promise<Conversion>;
     /** Creates a new Conversion instance (duh). */
     private constructor();
-    /** @internal */
-    _init(): Promise<void>;
-    /** @internal */
-    _getInvalidityExplanation(): string[];
     /**
      * Executes the conversion process. Resolves once conversion is complete.
      *
@@ -362,14 +321,6 @@ export declare class Conversion {
      * Does nothing if the conversion is already complete.
      */
     cancel(): Promise<void>;
-    /** @internal */
-    _processVideoTrack(track: InputVideoTrack, trackOptions: ConversionVideoOptions, outputTrackId: number): Promise<void>;
-    /** @internal */
-    _processAudioTrack(track: InputAudioTrack, trackOptions: ConversionAudioOptions, outputTrackId: number): Promise<void>;
-    /** @internal */
-    _registerAudioSample(sample: AudioSample, source: AudioSampleSource, outputTrackId: number, getLastSampleTimestamp: () => number | null): Promise<void>;
-    /** @internal */
-    _reportProgress(trackId: number, endTimestamp: number): void;
 }
 /**
  * Thrown when a conversion couldn't complete due to being canceled.
@@ -380,23 +331,4 @@ export declare class ConversionCanceledError extends Error {
     /** Creates a new {@link ConversionCanceledError}. */
     constructor(message?: string);
 }
-/**
- * Utility class for synchronizing multiple track packet consumers with one another. We don't want one consumer to get
- * too out-of-sync with the others, as that may lead to a large number of packets that need to be internally buffered
- * before they can be written. Therefore, we use this class to slow down a consumer if it is too far ahead of the
- * slowest consumer.
- */
-declare class TrackSynchronizer {
-    maxTimestamps: Map<number, number>;
-    resolvers: {
-        timestamp: number;
-        resolve: () => void;
-    }[];
-    declareTrack(trackId: number): void;
-    shouldWait(trackId: number, timestamp: number): boolean;
-    wait(timestamp: number): Promise<void>;
-    closeTrack(trackId: number): void;
-    computeMinAndMaybeResolve(): number;
-}
-export {};
 //# sourceMappingURL=conversion.d.ts.map

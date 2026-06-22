@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { MaybePromise } from './misc';
-import { Source } from './source';
+import { MaybePromise } from './misc.js';
+import { Source } from './source.js';
 export declare class Reader {
     source: Source;
     constructor(source: Source);

@@ -5,14 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Muxer } from '../muxer';
-import { parsePcmCodec, validateAudioChunkMetadata } from '../codec';
-import { WaveFormat } from './wave-demuxer';
-import { RiffWriter } from './riff-writer';
-import { assert, assertNever, isIso88591Compatible, keyValueIterator } from '../misc';
-import { metadataTagsAreEmpty } from '../metadata';
-import { Id3V2Writer } from '../id3';
-import { Logging } from '../logging';
+import { Muxer } from '../muxer.js';
+import { parsePcmCodec, validateAudioChunkMetadata } from '../codec.js';
+import { WaveFormat } from './wave-demuxer.js';
+import { RiffWriter } from './riff-writer.js';
+import { assert, assertNever, isIso88591Compatible, keyValueIterator } from '../misc.js';
+import { metadataTagsAreEmpty } from '../metadata.js';
+import { Id3V2Writer } from '../id3.js';
+import { Logging } from '../logging.js';
 export class WaveMuxer extends Muxer {
     constructor(output, format) {
         super(output);

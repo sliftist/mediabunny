@@ -5,13 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { buildAdtsHeaderTemplate, parseAacAudioSpecificConfig, writeAdtsFrameLength } from '../../shared/aac-misc';
-import { validateAudioChunkMetadata, validateVideoChunkMetadata } from '../codec';
-import { AC3_REGISTRATION_DESCRIPTOR, AvcNalUnitType, concatNalUnitsInAnnexB, deserializeAvcDecoderConfigurationRecord, deserializeHevcDecoderConfigurationRecord, EAC3_REGISTRATION_DESCRIPTOR, extractNalUnitTypeForAvc, extractNalUnitTypeForHevc, HevcNalUnitType, iterateNalUnitsInAnnexB, iterateNalUnitsInLengthPrefixed, } from '../codec-data';
-import { Bitstream } from '../../shared/bitstream';
-import { assert, promiseWithResolvers, setUint24, toDataView, toUint8Array } from '../misc';
-import { Muxer } from '../muxer';
-import { buildMpegTsMimeType, TIMESCALE, TS_PACKET_SIZE } from './mpeg-ts-misc';
+import { buildAdtsHeaderTemplate, parseAacAudioSpecificConfig, writeAdtsFrameLength } from '../../shared/aac-misc.js';
+import { validateAudioChunkMetadata, validateVideoChunkMetadata } from '../codec.js';
+import { AC3_REGISTRATION_DESCRIPTOR, AvcNalUnitType, concatNalUnitsInAnnexB, deserializeAvcDecoderConfigurationRecord, deserializeHevcDecoderConfigurationRecord, EAC3_REGISTRATION_DESCRIPTOR, extractNalUnitTypeForAvc, extractNalUnitTypeForHevc, HevcNalUnitType, iterateNalUnitsInAnnexB, iterateNalUnitsInLengthPrefixed, } from '../codec-data.js';
+import { Bitstream } from '../../shared/bitstream.js';
+import { assert, promiseWithResolvers, setUint24, toDataView, toUint8Array } from '../misc.js';
+import { Muxer } from '../muxer.js';
+import { buildMpegTsMimeType, TIMESCALE, TS_PACKET_SIZE } from './mpeg-ts-misc.js';
 // Resources:
 // ISO/IEC 13818-1
 const PAT_PID = 0x0000;

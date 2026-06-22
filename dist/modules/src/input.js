@@ -5,11 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { InputFormat, validateInputFormatOptions } from './input-format';
-import { InputAudioTrack, InputVideoTrack, mergeInputTrackQueries, queryInputTracks, toValidatedInputTrackQuery, prefer, desc, } from './input-track';
-import { arrayArgmin, arrayCount, assert, EventEmitter, polyfillSymbolDispose, removeItem, } from './misc';
-import { Reader } from './reader';
-import { PathedSource, Source, SourceRef, sourceRequestsAreEqual, } from './source';
+import { InputFormat, validateInputFormatOptions } from './input-format.js';
+import { InputAudioTrack, InputVideoTrack, mergeInputTrackQueries, queryInputTracks, toValidatedInputTrackQuery, prefer, desc, } from './input-track.js';
+import { arrayArgmin, arrayCount, assert, EventEmitter, polyfillSymbolDispose, removeItem, } from './misc.js';
+import { Reader } from './reader.js';
+import { PathedSource, Source, SourceRef, sourceRequestsAreEqual, } from './source.js';
 polyfillSymbolDispose();
 export const DEFAULT_SOURCE_CACHE_GROUP = 1;
 export const ENCRYPTION_KEY_CACHE_GROUP = 2;

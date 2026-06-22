@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AsyncMutex } from './misc';
-import { Output, OutputAudioTrack, OutputSubtitleTrack, OutputTrack, OutputVideoTrack } from './output';
-import { EncodedPacket } from './packet';
-import { SubtitleCue, SubtitleMetadata } from './subtitles';
+import { AsyncMutex } from './misc.js';
+import { Output, OutputAudioTrack, OutputSubtitleTrack, OutputTrack, OutputVideoTrack } from './output.js';
+import { EncodedPacket } from './packet.js';
+import { SubtitleCue, SubtitleMetadata } from './subtitles.js';
 export declare abstract class Muxer {
     output: Output;
     mutex: AsyncMutex;

@@ -5,18 +5,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AdtsMuxer } from './adts/adts-muxer';
-import { AUDIO_CODECS, NON_PCM_AUDIO_CODECS, PCM_AUDIO_CODECS, SUBTITLE_CODECS, VIDEO_CODECS, } from './codec';
-import { FlacMuxer } from './flac/flac-muxer';
-import { IsobmffMuxer } from './isobmff/isobmff-muxer';
-import { MatroskaMuxer } from './matroska/matroska-muxer';
-import { Mp3Muxer } from './mp3/mp3-muxer';
-import { OggMuxer } from './ogg/ogg-muxer';
-import { MpegTsMuxer } from './mpeg-ts/mpeg-ts-muxer';
-import { WaveMuxer } from './wave/wave-muxer';
-import { HlsMuxer } from './hls/hls-muxer';
-import { HLS_MIME_TYPE } from './hls/hls-misc';
-import { toArray } from './misc';
+import { AdtsMuxer } from './adts/adts-muxer.js';
+import { AUDIO_CODECS, NON_PCM_AUDIO_CODECS, PCM_AUDIO_CODECS, SUBTITLE_CODECS, VIDEO_CODECS, } from './codec.js';
+import { FlacMuxer } from './flac/flac-muxer.js';
+import { IsobmffMuxer } from './isobmff/isobmff-muxer.js';
+import { MatroskaMuxer } from './matroska/matroska-muxer.js';
+import { Mp3Muxer } from './mp3/mp3-muxer.js';
+import { OggMuxer } from './ogg/ogg-muxer.js';
+import { MpegTsMuxer } from './mpeg-ts/mpeg-ts-muxer.js';
+import { WaveMuxer } from './wave/wave-muxer.js';
+import { HlsMuxer } from './hls/hls-muxer.js';
+import { HLS_MIME_TYPE } from './hls/hls-misc.js';
+import { toArray } from './misc.js';
 /**
  * Base class representing an output media file format.
  * @group Output formats

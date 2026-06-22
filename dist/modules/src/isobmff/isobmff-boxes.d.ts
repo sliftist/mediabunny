@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Writer } from '../writer';
-import { IsobmffAudioTrackData, IsobmffMuxer, IsobmffSubtitleTrackData, IsobmffTrackData, IsobmffVideoTrackData } from './isobmff-muxer';
+import { Writer } from '../writer.js';
+import { IsobmffAudioTrackData, IsobmffMuxer, IsobmffSubtitleTrackData, IsobmffTrackData, IsobmffVideoTrackData } from './isobmff-muxer.js';
 export declare class IsobmffBoxWriter {
     writer: Writer;
     private helper;

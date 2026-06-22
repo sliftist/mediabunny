@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { arrayCount, assert, roundToDivisor } from './misc';
+import { arrayCount, assert, roundToDivisor } from './misc.js';
 export class SegmentedInput {
     constructor(input, path, trackDeclarations) {
         this.nextInputCacheAge = 0;

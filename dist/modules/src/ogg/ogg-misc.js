@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { parseOpusTocByte } from '../codec-data';
-import { assert, ilog, toDataView } from '../misc';
+import { parseOpusTocByte } from '../codec-data.js';
+import { assert, ilog, toDataView } from '../misc.js';
 export const OGGS = 0x5367674f; // 'OggS'
 const OGG_CRC_POLYNOMIAL = 0x04c11db7;
 const OGG_CRC_TABLE = new Uint32Array(256);

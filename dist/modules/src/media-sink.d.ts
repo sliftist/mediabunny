@@ -5,12 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { PcmAudioCodec, VideoCodec, AudioCodec } from './codec';
-import { CustomVideoDecoder, CustomAudioDecoder } from './custom-coder';
-import { InputAudioTrack, InputTrack, InputVideoTrack } from './input-track';
-import { AnyIterable, CallSerializer, Rotation } from './misc';
-import { EncodedPacket } from './packet';
-import { AudioSample, CropRectangle, VideoSample } from './sample';
+import { InputAudioTrack, InputTrack, InputVideoTrack } from './input-track.js';
+import { AnyIterable, Rotation } from './misc.js';
+import { EncodedPacket } from './packet.js';
+import { AudioSample, CropRectangle, VideoSample } from './sample.js';
 /**
  * Additional options for controlling packet retrieval.
  * @group Media sinks
@@ -48,8 +46,6 @@ export type PacketRetrievalOptions = {
  * @public
  */
 export declare class EncodedPacketSink {
-    /** @internal */
-    _track: InputTrack;
     /** Creates a new {@link EncodedPacketSink} for the given {@link InputTrack}. */
     constructor(track: InputTrack);
     /**
@@ -101,75 +97,12 @@ export declare class EncodedPacketSink {
      */
     packets(startPacket?: EncodedPacket, endPacket?: EncodedPacket, options?: PacketRetrievalOptions): AsyncGenerator<EncodedPacket, void, unknown>;
 }
-declare abstract class DecoderWrapper<MediaSample extends VideoSample | AudioSample> {
-    onSample: (sample: MediaSample) => unknown;
-    onError: (error: Error) => unknown;
-    constructor(onSample: (sample: MediaSample) => unknown, onError: (error: Error) => unknown);
-    abstract getDecodeQueueSize(): number;
-    abstract decode(packet: EncodedPacket): void;
-    abstract flush(): Promise<void>;
-    abstract close(): void;
-}
 /**
  * Base class for decoded media sample sinks.
  * @group Media sinks
  * @public
  */
 export declare abstract class BaseMediaSampleSink<MediaSample extends VideoSample | AudioSample> {
-    /** @internal */
-    abstract _track: InputTrack;
-    /** @internal */
-    abstract _createDecoder(onSample: (sample: MediaSample) => unknown, onError: (error: Error) => unknown): Promise<DecoderWrapper<MediaSample>>;
-    /** @internal */
-    abstract _createPacketSink(): EncodedPacketSink;
-    /** @internal */
-    protected mediaSamplesInRange(startTimestamp: number | undefined, endTimestamp: number | undefined, options: PacketRetrievalOptions): AsyncGenerator<MediaSample, void, unknown>;
-    /** @internal */
-    protected mediaSamplesAtTimestamps(timestamps: AnyIterable<number>, options: PacketRetrievalOptions): AsyncGenerator<MediaSample | null, void, unknown>;
-}
-declare class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
-    codec: VideoCodec;
-    decoderConfig: VideoDecoderConfig;
-    rotation: Rotation;
-    timeResolution: number;
-    decoder: VideoDecoder | null;
-    customDecoder: CustomVideoDecoder | null;
-    customDecoderCallSerializer: CallSerializer;
-    customDecoderQueueSize: number;
-    inputTimestamps: number[];
-    sampleQueue: VideoSample[];
-    currentPacketIndex: number;
-    raslSkipped: boolean;
-    alphaDecoder: VideoDecoder | null;
-    alphaHadKeyframe: boolean;
-    colorQueue: VideoFrame[];
-    alphaQueue: (VideoFrame | null)[];
-    merger: ColorAlphaMerger | null;
-    decodedAlphaChunkCount: number;
-    alphaDecoderQueueSize: number;
-    /** Each value is the number of decoded alpha chunks at which a null alpha frame should be added. */
-    nullAlphaFrameQueue: number[];
-    currentAlphaPacketIndex: number;
-    alphaRaslSkipped: boolean;
-    frameHandlerSerializer: CallSerializer;
-    constructor(onSample: (sample: VideoSample) => unknown, onError: (error: Error) => unknown, codec: VideoCodec, decoderConfig: VideoDecoderConfig, rotation: Rotation, timeResolution: number);
-    getDecodeQueueSize(): number;
-    decode(packet: EncodedPacket): void;
-    decodeAlphaData(packet: EncodedPacket): void;
-    pushNullAlphaFrame(): void;
-    /**
-     * If we're using HEVC, we need to make sure to skip any RASL slices that follow a non-IDR key frame such as
-     * CRA_NUT. This is because RASL slices cannot be decoded without data before the CRA_NUT. Browsers behave
-     * differently here: Chromium drops the packets, Safari throws a decoder error. Either way, it's not good
-     * and causes bugs upstream. So, let's take the dropping into our own hands.
-     */
-    hasHevcRaslPicture(packetData: Uint8Array): boolean;
-    /** Handler for the WebCodecs VideoDecoder for ironing out browser differences. */
-    sampleHandler(sample: VideoSample): void;
-    finalizeAndEmitSample(sample: VideoSample): void;
-    mergeAlpha(color: VideoFrame, alpha: VideoFrame | null): Promise<void>;
-    flush(): Promise<void>;
-    close(): void;
 }
 /** Utility class that merges together color and alpha information using simple WebGL 2 shaders. */
 export declare class ColorAlphaMerger {
@@ -216,16 +149,8 @@ export type VideoSinkDecoderOptions = {
  * @public
  */
 export declare class VideoSampleSink extends BaseMediaSampleSink<VideoSample> {
-    /** @internal */
-    _track: InputVideoTrack;
-    /** @internal */
-    _decoderOptions: VideoSinkDecoderOptions;
     /** Creates a new {@link VideoSampleSink} for the given {@link InputVideoTrack}. */
     constructor(videoTrack: InputVideoTrack, decoderOptions?: VideoSinkDecoderOptions);
-    /** @internal */
-    _createDecoder(onSample: (sample: VideoSample) => unknown, onError: (error: Error) => unknown): Promise<VideoDecoderWrapper>;
-    /** @internal */
-    _createPacketSink(): EncodedPacketSink;
     /**
      * Retrieves the video sample (frame) corresponding to the given timestamp, in seconds. More specifically, returns
      * the last video sample (in presentation order) with a start timestamp less than or equal to the given timestamp.
@@ -333,41 +258,8 @@ export type CanvasSinkOptions = {
  * @public
  */
 export declare class CanvasSink {
-    /** @internal */
-    _videoTrack: InputVideoTrack;
-    /** @internal */
-    _alpha: boolean;
-    /** @internal */
-    _width: number;
-    /** @internal */
-    _height: number;
-    /** @internal */
-    _options: CanvasSinkOptions;
-    /** @internal */
-    _fit: 'fill' | 'contain' | 'cover';
-    /** @internal */
-    _rotation: Rotation;
-    /** @internal */
-    _crop?: {
-        left: number;
-        top: number;
-        width: number;
-        height: number;
-    };
-    /** @internal */
-    _initPromise: Promise<void> | null;
-    /** @internal */
-    _videoSampleSink: VideoSampleSink;
-    /** @internal */
-    _canvasPool: (HTMLCanvasElement | OffscreenCanvas | null)[];
-    /** @internal */
-    _nextCanvasIndex: number;
     /** Creates a new {@link CanvasSink} for the given {@link InputVideoTrack}. */
     constructor(videoTrack: InputVideoTrack, options?: CanvasSinkOptions);
-    /** @internal */
-    _ensureInit(): Promise<void>;
-    /** @internal */
-    _videoSampleToWrappedCanvas(sample: VideoSample): WrappedCanvas;
     /**
      * Retrieves a canvas with the video frame corresponding to the given timestamp, in seconds. More specifically,
      * returns the last video frame (in presentation order) with a start timestamp less than or equal to the given
@@ -400,49 +292,14 @@ export declare class CanvasSink {
      */
     canvasesAtTimestamps(timestamps: AnyIterable<number>, options?: PacketRetrievalOptions): AsyncGenerator<WrappedCanvas | null, void, unknown>;
 }
-declare class AudioDecoderWrapper extends DecoderWrapper<AudioSample> {
-    decoder: AudioDecoder | null;
-    customDecoder: CustomAudioDecoder | null;
-    customDecoderCallSerializer: CallSerializer;
-    customDecoderQueueSize: number;
-    currentTimestamp: number | null;
-    expectedFirstTimestamp: number | null;
-    timestampOffset: number;
-    constructor(onSample: (sample: AudioSample) => unknown, onError: (error: Error) => unknown, codec: AudioCodec, decoderConfig: AudioDecoderConfig);
-    getDecodeQueueSize(): number;
-    decode(packet: EncodedPacket): void;
-    flush(): Promise<void>;
-    close(): void;
-}
-declare class PcmAudioDecoderWrapper extends DecoderWrapper<AudioSample> {
-    decoderConfig: AudioDecoderConfig;
-    codec: PcmAudioCodec;
-    inputSampleSize: 1 | 2 | 3 | 4 | 8;
-    readInputValue: (view: DataView, byteOffset: number) => number;
-    outputSampleSize: 1 | 2 | 4;
-    outputFormat: 'u8' | 's16' | 's32' | 'f32';
-    writeOutputValue: (view: DataView, byteOffset: number, value: number) => void;
-    currentTimestamp: number | null;
-    constructor(onSample: (sample: AudioSample) => unknown, onError: (error: Error) => unknown, decoderConfig: AudioDecoderConfig);
-    getDecodeQueueSize(): number;
-    decode(packet: EncodedPacket): void;
-    flush(): Promise<void>;
-    close(): void;
-}
 /**
  * Sink for retrieving decoded audio samples from an audio track.
  * @group Media sinks
  * @public
  */
 export declare class AudioSampleSink extends BaseMediaSampleSink<AudioSample> {
-    /** @internal */
-    _track: InputAudioTrack;
     /** Creates a new {@link AudioSampleSink} for the given {@link InputAudioTrack}. */
     constructor(audioTrack: InputAudioTrack);
-    /** @internal */
-    _createDecoder(onSample: (sample: AudioSample) => unknown, onError: (error: Error) => unknown): Promise<AudioDecoderWrapper | PcmAudioDecoderWrapper>;
-    /** @internal */
-    _createPacketSink(): EncodedPacketSink;
     /**
      * Retrieves the audio sample corresponding to the given timestamp, in seconds. More specifically, returns
      * the last audio sample (in presentation order) with a start timestamp less than or equal to the given timestamp.
@@ -496,12 +353,8 @@ export type WrappedAudioBuffer = {
  * @public
  */
 export declare class AudioBufferSink {
-    /** @internal */
-    _audioSampleSink: AudioSampleSink;
     /** Creates a new {@link AudioBufferSink} for the given {@link InputAudioTrack}. */
     constructor(audioTrack: InputAudioTrack);
-    /** @internal */
-    _audioSampleToWrappedArrayBuffer(sample: AudioSample): WrappedAudioBuffer;
     /**
      * Retrieves the audio buffer corresponding to the given timestamp, in seconds. More specifically, returns
      * the last audio buffer (in presentation order) with a start timestamp less than or equal to the given timestamp.
@@ -531,5 +384,4 @@ export declare class AudioBufferSink {
      */
     buffersAtTimestamps(timestamps: AnyIterable<number>, options?: PacketRetrievalOptions): AsyncGenerator<WrappedAudioBuffer | null, void, unknown>;
 }
-export {};
 //# sourceMappingURL=media-sink.d.ts.map

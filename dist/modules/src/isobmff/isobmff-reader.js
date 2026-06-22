@@ -5,9 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { RichImageData } from '../metadata';
-import { textDecoder } from '../misc';
-import { readAscii, readBytes, readI32Be, readU16Be, readU32Be, readU64Be, readU8 } from '../reader';
+import { RichImageData } from '../metadata.js';
+import { textDecoder } from '../misc.js';
+import { readAscii, readBytes, readI32Be, readU16Be, readU32Be, readU64Be, readU8 } from '../reader.js';
 export const MIN_BOX_HEADER_SIZE = 8;
 export const MAX_BOX_HEADER_SIZE = 16;
 export const readBoxHeader = (slice) => {

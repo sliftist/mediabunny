@@ -5,19 +5,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Bitstream } from '../../shared/bitstream';
-import { COLOR_PRIMARIES_MAP, MATRIX_COEFFICIENTS_MAP, TRANSFER_CHARACTERISTICS_MAP, UNDETERMINED_LANGUAGE, assert, assertNever, colorSpaceIsComplete, imageMimeTypeToExtension, keyValueIterator, normalizeRotation, promiseWithResolvers, simplifyRational, textEncoder, toUint8Array, uint8ArraysAreEqual, writeBits, roundToDivisor, } from '../misc';
-import { CODEC_STRING_MAP, EBMLFloat32, EBMLFloat64, EBMLId, EBMLSignedInt, EBMLUnicodeString, EBMLWriter, } from './ebml';
-import { buildMatroskaMimeType } from './matroska-misc';
-import { WebMOutputFormat } from '../output-format';
-import { formatSubtitleTimestamp, inlineTimestampRegex, parseSubtitleTimestamp, } from '../subtitles';
-import { aacChannelMap, aacFrequencyTable, buildAacAudioSpecificConfig } from '../../shared/aac-misc';
-import { OPUS_SAMPLE_RATE, PCM_AUDIO_CODECS, generateAv1CodecConfigurationFromCodecString, generateVp9CodecConfigurationFromCodecString, parsePcmCodec, validateAudioChunkMetadata, validateSubtitleMetadata, validateVideoChunkMetadata, } from '../codec';
-import { MAX_ADTS_FRAME_HEADER_SIZE, MIN_ADTS_FRAME_HEADER_SIZE, readAdtsFrameHeader } from '../adts/adts-reader';
-import { FileSlice } from '../reader';
-import { Muxer } from '../muxer';
-import { parseOpusIdentificationHeader } from '../codec-data';
-import { AttachedFile } from '../metadata';
+import { Bitstream } from '../../shared/bitstream.js';
+import { COLOR_PRIMARIES_MAP, MATRIX_COEFFICIENTS_MAP, TRANSFER_CHARACTERISTICS_MAP, UNDETERMINED_LANGUAGE, assert, assertNever, colorSpaceIsComplete, imageMimeTypeToExtension, keyValueIterator, normalizeRotation, promiseWithResolvers, simplifyRational, textEncoder, toUint8Array, uint8ArraysAreEqual, writeBits, roundToDivisor, } from '../misc.js';
+import { CODEC_STRING_MAP, EBMLFloat32, EBMLFloat64, EBMLId, EBMLSignedInt, EBMLUnicodeString, EBMLWriter, } from './ebml.js';
+import { buildMatroskaMimeType } from './matroska-misc.js';
+import { WebMOutputFormat } from '../output-format.js';
+import { formatSubtitleTimestamp, inlineTimestampRegex, parseSubtitleTimestamp, } from '../subtitles.js';
+import { aacChannelMap, aacFrequencyTable, buildAacAudioSpecificConfig } from '../../shared/aac-misc.js';
+import { OPUS_SAMPLE_RATE, PCM_AUDIO_CODECS, generateAv1CodecConfigurationFromCodecString, generateVp9CodecConfigurationFromCodecString, parsePcmCodec, validateAudioChunkMetadata, validateSubtitleMetadata, validateVideoChunkMetadata, } from '../codec.js';
+import { MAX_ADTS_FRAME_HEADER_SIZE, MIN_ADTS_FRAME_HEADER_SIZE, readAdtsFrameHeader } from '../adts/adts-reader.js';
+import { FileSlice } from '../reader.js';
+import { Muxer } from '../muxer.js';
+import { parseOpusIdentificationHeader } from '../codec-data.js';
+import { AttachedFile } from '../metadata.js';
 const MIN_CLUSTER_TIMESTAMP_MS = -(2 ** 15);
 const MAX_CLUSTER_TIMESTAMP_MS = 2 ** 15 - 1;
 const APP_NAME = 'Mediabunny';

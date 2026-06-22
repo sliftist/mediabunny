@@ -5,12 +5,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Muxer } from '../muxer';
-import { Output, OutputAudioTrack, OutputSubtitleTrack, OutputTrack, OutputVideoTrack } from '../output';
-import { Rational } from '../misc';
-import { IsobmffOutputFormat } from '../output-format';
-import { SubtitleConfig, SubtitleCue, SubtitleMetadata } from '../subtitles';
-import { EncodedPacket, PacketType } from '../packet';
+import { Muxer } from '../muxer.js';
+import { Output, OutputAudioTrack, OutputSubtitleTrack, OutputTrack, OutputVideoTrack } from '../output.js';
+import { Rational } from '../misc.js';
+import { IsobmffOutputFormat } from '../output-format.js';
+import { SubtitleConfig, SubtitleCue, SubtitleMetadata } from '../subtitles.js';
+import { EncodedPacket, PacketType } from '../packet.js';
 export declare const GLOBAL_TIMESCALE = 57600;
 export type Sample = {
     timestamp: number;

@@ -5,9 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { MetadataTags } from './metadata';
-import { FileSlice } from './reader';
-import { Writer } from './writer';
+import { MetadataTags } from './metadata.js';
+import { FileSlice } from './reader.js';
+import { Writer } from './writer.js';
 export type Id3V2Header = {
     majorVersion: number;
     revision: number;
@@ -39,7 +39,7 @@ export declare class Id3V2Reader {
     pos: number;
     view: DataView;
     constructor(header: Id3V2Header, bytes: Uint8Array);
-    frameHeaderSize(): 10 | 6;
+    frameHeaderSize(): 6 | 10;
     ununsynchronizeAll(): void;
     ununsynchronizeRegion(start: number, end: number): void;
     readBytes(length: number): Uint8Array<ArrayBufferLike>;

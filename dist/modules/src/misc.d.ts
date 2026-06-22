@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Bitstream } from '../shared/bitstream';
+import { Bitstream } from '../shared/bitstream.js';
 export declare function assert(x: unknown): asserts x;
 /**
  * Represents a clockwise rotation in degrees.
@@ -34,7 +34,7 @@ export declare const COLOR_PRIMARIES_MAP: {
     bt2020: number;
     smpte432: number;
 };
-export declare const COLOR_PRIMARIES_MAP_INVERSE: Record<number, "bt470bg" | "bt709" | "smpte170m" | "bt2020" | "smpte432">;
+export declare const COLOR_PRIMARIES_MAP_INVERSE: Record<number, "bt709" | "bt470bg" | "smpte170m" | "bt2020" | "smpte432">;
 export declare const TRANSFER_CHARACTERISTICS_MAP: {
     bt709: number;
     smpte170m: number;
@@ -43,7 +43,7 @@ export declare const TRANSFER_CHARACTERISTICS_MAP: {
     pq: number;
     hlg: number;
 };
-export declare const TRANSFER_CHARACTERISTICS_MAP_INVERSE: Record<number, "bt709" | "smpte170m" | "iec61966-2-1" | "pq" | "hlg" | "linear">;
+export declare const TRANSFER_CHARACTERISTICS_MAP_INVERSE: Record<number, "bt709" | "smpte170m" | "linear" | "iec61966-2-1" | "pq" | "hlg">;
 export declare const MATRIX_COEFFICIENTS_MAP: {
     rgb: number;
     bt709: number;
@@ -51,7 +51,7 @@ export declare const MATRIX_COEFFICIENTS_MAP: {
     smpte170m: number;
     'bt2020-ncl': number;
 };
-export declare const MATRIX_COEFFICIENTS_MAP_INVERSE: Record<number, "bt470bg" | "bt709" | "rgb" | "smpte170m" | "bt2020-ncl">;
+export declare const MATRIX_COEFFICIENTS_MAP_INVERSE: Record<number, "bt709" | "bt470bg" | "smpte170m" | "rgb" | "bt2020-ncl">;
 export type RequiredNonNull<T> = {
     [K in keyof T]-?: NonNullable<T[K]>;
 };
@@ -249,15 +249,8 @@ export type EventListenerOptions = {
  * @public
  */
 export declare class EventEmitter<TEvents extends Record<string, unknown>> {
-    /** @internal */
-    _listeners: Map<keyof TEvents, Set<{
-        fn: (data: never) => unknown;
-        once: boolean;
-    }>>;
     /** Registers a listener for the given event. Returns a function that, when called, removes the listener again. */
     on<K extends keyof TEvents>(event: K, listener: (data: TEvents[K]) => unknown, options?: EventListenerOptions): () => void;
-    /** @internal */
-    _emit<K extends keyof TEvents>(...args: TEvents[K] extends void ? [event: K] : [event: K, data: TEvents[K]]): void;
 }
 export declare const ceilToMultipleOfTwo: (value: number) => number;
 /**
@@ -268,10 +261,6 @@ export declare const ceilToMultipleOfTwo: (value: number) => number;
  * @public
 */
 export declare class ConcurrentRunner {
-    /** @internal */
-    _queue: Promise<unknown>[];
-    /** @internal */
-    _errored: boolean;
     /**
      * The maximum number of in-flight promises. You can also think of it as the "high water mark".
      * You can set this value to dynamically change the level of parallelism.

@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Av1CodecInfo, AvcDecoderConfigurationRecord, HevcDecoderConfigurationRecord, Vp9CodecInfo } from './codec-data';
-import { SubtitleMetadata } from './subtitles';
+import { Av1CodecInfo, AvcDecoderConfigurationRecord, HevcDecoderConfigurationRecord, Vp9CodecInfo } from './codec-data.js';
+import { SubtitleMetadata } from './subtitles.js';
 /**
  * List of known video codecs, ordered by encoding preference.
  * @group Codecs
@@ -88,7 +88,7 @@ export declare const extractVideoCodecString: (trackInfo: {
     vp9CodecInfo: Vp9CodecInfo | null;
     av1CodecInfo: Av1CodecInfo | null;
 }) => string;
-export declare const buildAudioCodecString: (codec: AudioCodec, numberOfChannels: number, sampleRate: number) => "opus" | "mp3" | "vorbis" | "flac" | "pcm-s16" | "pcm-s16be" | "pcm-s24" | "pcm-s24be" | "pcm-s32" | "pcm-s32be" | "pcm-f32" | "pcm-f32be" | "pcm-f64" | "pcm-f64be" | "pcm-u8" | "pcm-s8" | "ulaw" | "alaw" | "ac-3" | "ec-3" | "mp4a.40.2" | "mp4a.40.5" | "mp4a.40.29";
+export declare const buildAudioCodecString: (codec: AudioCodec, numberOfChannels: number, sampleRate: number) => "vorbis" | "pcm-s16" | "pcm-s16be" | "pcm-s24" | "pcm-s24be" | "pcm-s32" | "pcm-s32be" | "pcm-f32" | "pcm-f32be" | "pcm-f64" | "pcm-f64be" | "pcm-u8" | "pcm-s8" | "ulaw" | "alaw" | "opus" | "mp3" | "flac" | "ac-3" | "ec-3" | "mp4a.40.29" | "mp4a.40.5" | "mp4a.40.2";
 export type AacCodecInfo = {
     isMpeg2: boolean;
     objectType: number | null;
@@ -113,7 +113,7 @@ export declare const parsePcmCodec: (codec: PcmAudioCodec) => {
     silentValue: number;
 } | {
     dataType: "unsigned" | "signed" | "float";
-    sampleSize: 1 | 8 | 4 | 2 | 3;
+    sampleSize: 8 | 1 | 2 | 3 | 4;
     littleEndian: boolean;
     silentValue: number;
 };

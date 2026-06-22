@@ -5,14 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { validateAudioChunkMetadata } from '../codec';
-import { createVorbisComments, FlacBlockType } from '../codec-data';
-import { assert, textEncoder, toDataView, toUint8Array, } from '../misc';
-import { Muxer } from '../muxer';
-import { FileSlice, readBytes } from '../reader';
-import { metadataTagsAreEmpty } from '../metadata';
-import { readBlockSize, getBlockSizeOrUncommon, readCodedNumber, } from './flac-misc';
-import { Bitstream } from '../../shared/bitstream';
+import { validateAudioChunkMetadata } from '../codec.js';
+import { createVorbisComments, FlacBlockType } from '../codec-data.js';
+import { assert, textEncoder, toDataView, toUint8Array, } from '../misc.js';
+import { Muxer } from '../muxer.js';
+import { FileSlice, readBytes } from '../reader.js';
+import { metadataTagsAreEmpty } from '../metadata.js';
+import { readBlockSize, getBlockSizeOrUncommon, readCodedNumber, } from './flac-misc.js';
+import { Bitstream } from '../../shared/bitstream.js';
 const FLAC_HEADER = /* #__PURE__ */ new Uint8Array([0x66, 0x4c, 0x61, 0x43]); // 'fLaC'
 const STREAMINFO_SIZE = 38;
 const STREAMINFO_BLOCK_SIZE = 34;

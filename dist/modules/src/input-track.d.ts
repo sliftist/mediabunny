@@ -5,14 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AudioCodec, MediaCodec, VideoCodec } from './codec';
-import { Input } from './input';
-import { PacketRetrievalOptions } from './media-sink';
-import { MaybePromise, Rational, Rotation } from './misc';
-import { TrackType } from './output';
-import { EncodedPacket, PacketType } from './packet';
-import { TrackDisposition } from './metadata';
-import { DurationMetadataRequestOptions } from './demuxer';
+import { AudioCodec, MediaCodec, VideoCodec } from './codec.js';
+import { Input } from './input.js';
+import { PacketRetrievalOptions } from './media-sink.js';
+import { MaybePromise, Rational, Rotation } from './misc.js';
+import { TrackType } from './output.js';
+import { EncodedPacket, PacketType } from './packet.js';
+import { TrackDisposition } from './metadata.js';
+import { DurationMetadataRequestOptions } from './demuxer.js';
 /**
  * Contains aggregate statistics about the encoded packets of a track.
  * @group Input files & tracks
@@ -60,10 +60,6 @@ export interface InputTrackBacking {
 export declare abstract class InputTrack {
     /** The input file this track belongs to. */
     readonly input: Input;
-    /** @internal */
-    _backing: InputTrackBacking;
-    /** @internal */
-    constructor(input: Input, backing: InputTrackBacking);
     /** The type of the track. */
     abstract get type(): TrackType;
     /** Returns the codec of the track's packets. */
@@ -288,12 +284,6 @@ export interface InputVideoTrackBacking extends InputTrackBacking {
  * @public
  */
 export declare class InputVideoTrack extends InputTrack {
-    /** @internal */
-    _backing: InputVideoTrackBacking;
-    /** @internal */
-    _pixelAspectRatioCache: Rational | null;
-    /** @internal */
-    constructor(input: Input, backing: InputVideoTrackBacking);
     get type(): TrackType;
     /** The codec of the track's packets. */
     getCodec(): Promise<VideoCodec | null>;
@@ -396,10 +386,6 @@ export interface InputAudioTrackBacking extends InputTrackBacking {
  * @public
  */
 export declare class InputAudioTrack extends InputTrack {
-    /** @internal */
-    _backing: InputAudioTrackBacking;
-    /** @internal */
-    constructor(input: Input, backing: InputAudioTrackBacking);
     get type(): TrackType;
     /** The codec of the track's packets. */
     getCodec(): Promise<AudioCodec | null>;

@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { parseAacAudioSpecificConfig } from '../shared/aac-misc';
-import { COLOR_PRIMARIES_MAP, MATRIX_COEFFICIENTS_MAP, TRANSFER_CHARACTERISTICS_MAP, assert, base64ToBytes, bytesToHexString, isAllowSharedBufferSource, last, reverseBitsU32, toDataView, } from './misc';
+import { parseAacAudioSpecificConfig } from '../shared/aac-misc.js';
+import { COLOR_PRIMARIES_MAP, MATRIX_COEFFICIENTS_MAP, TRANSFER_CHARACTERISTICS_MAP, assert, base64ToBytes, bytesToHexString, isAllowSharedBufferSource, last, reverseBitsU32, toDataView, } from './misc.js';
 /**
  * List of known video codecs, ordered by encoding preference.
  * @group Codecs

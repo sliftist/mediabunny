@@ -5,20 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AdtsMuxer } from './adts/adts-muxer';
-import { AudioCodec, MediaCodec, SubtitleCodec, VideoCodec } from './codec';
-import { FlacMuxer } from './flac/flac-muxer';
-import { IsobmffMuxer } from './isobmff/isobmff-muxer';
-import { MatroskaMuxer } from './matroska/matroska-muxer';
-import { MediaSource } from './media-source';
-import { Mp3Muxer } from './mp3/mp3-muxer';
-import { Muxer } from './muxer';
-import { OggMuxer } from './ogg/ogg-muxer';
-import { Output, OutputTrack, TrackType } from './output';
-import { MpegTsMuxer } from './mpeg-ts/mpeg-ts-muxer';
-import { WaveMuxer } from './wave/wave-muxer';
-import { MaybePromise, FilePath } from './misc';
-import { Target } from './target';
+import { AudioCodec, MediaCodec, SubtitleCodec, VideoCodec } from './codec.js';
+import { MediaSource } from './media-source.js';
+import { OutputTrack, TrackType } from './output.js';
+import { MaybePromise, FilePath } from './misc.js';
+import { Target } from './target.js';
 /**
  * Specifies an inclusive range of integers.
  * @group Miscellaneous
@@ -47,10 +38,6 @@ export type TrackCountLimits = {
  * @public
  */
 export declare abstract class OutputFormat {
-    /** @internal */
-    abstract _createMuxer(output: Output): Muxer;
-    /** @internal */
-    abstract get _name(): string;
     /** The file extension used by this output format, beginning with a dot. */
     abstract get fileExtension(): string;
     /** The base MIME type of the output format. */
@@ -74,8 +61,6 @@ export declare abstract class OutputFormat {
     getSupportedAudioCodecs(): AudioCodec[];
     /** Returns a list of subtitle codecs that this output format can contain. */
     getSupportedSubtitleCodecs(): SubtitleCodec[];
-    /** @internal */
-    _codecUnsupportedHint(codec: MediaCodec): string;
 }
 /**
  * ISOBMFF-specific output options.
@@ -165,15 +150,11 @@ export type IsobmffOutputFormatOptions = {
  * @public
  */
 export declare abstract class IsobmffOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: IsobmffOutputFormatOptions;
     /** Internal constructor. */
     constructor(options?: IsobmffOutputFormatOptions);
     getSupportedTrackCounts(): TrackCountLimits;
     get supportsVideoRotationMetadata(): boolean;
     get supportsTimestampedMediaData(): boolean;
-    /** @internal */
-    _createMuxer(output: Output): IsobmffMuxer;
 }
 /**
  * MPEG-4 Part 14 (MP4) file format. Supports most codecs.
@@ -183,13 +164,9 @@ export declare abstract class IsobmffOutputFormat extends OutputFormat {
 export declare class Mp4OutputFormat extends IsobmffOutputFormat {
     /** Creates a new {@link Mp4OutputFormat} configured with the specified `options`. */
     constructor(options?: IsobmffOutputFormatOptions);
-    /** @internal */
-    get _name(): string;
     get fileExtension(): string;
     get mimeType(): string;
     getSupportedCodecs(): MediaCodec[];
-    /** @internal */
-    _codecUnsupportedHint(codec: MediaCodec): "" | " Switching to MOV will grant support for this codec.";
 }
 /**
  * CMAF-specific output options.
@@ -212,8 +189,6 @@ export type CmafOutputFormatOptions = Omit<IsobmffOutputFormatOptions, 'fastStar
 export declare class CmafOutputFormat extends IsobmffOutputFormat {
     /** Creates a new {@link CmafOutputFormat} configured with the specified `options`. */
     constructor(options?: CmafOutputFormatOptions);
-    /** @internal */
-    get _name(): string;
     get fileExtension(): string;
     get mimeType(): string;
     getSupportedCodecs(): MediaCodec[];
@@ -226,13 +201,9 @@ export declare class CmafOutputFormat extends IsobmffOutputFormat {
 export declare class MovOutputFormat extends IsobmffOutputFormat {
     /** Creates a new {@link MovOutputFormat} configured with the specified `options`. */
     constructor(options?: IsobmffOutputFormatOptions);
-    /** @internal */
-    get _name(): string;
     get fileExtension(): string;
     get mimeType(): string;
     getSupportedCodecs(): MediaCodec[];
-    /** @internal */
-    _codecUnsupportedHint(codec: MediaCodec): "" | " Switching to MP4 will grant support for this codec.";
 }
 /**
  * Matroska-specific output options.
@@ -285,14 +256,8 @@ export type MkvOutputFormatOptions = {
  * @public
  */
 export declare class MkvOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: MkvOutputFormatOptions;
     /** Creates a new {@link MkvOutputFormat} configured with the specified `options`. */
     constructor(options?: MkvOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): MatroskaMuxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -319,12 +284,8 @@ export declare class WebMOutputFormat extends MkvOutputFormat {
     /** Creates a new {@link WebMOutputFormat} configured with the specified `options`. */
     constructor(options?: MkvOutputFormatOptions);
     getSupportedCodecs(): MediaCodec[];
-    /** @internal */
-    get _name(): string;
     get fileExtension(): string;
     get mimeType(): string;
-    /** @internal */
-    _codecUnsupportedHint(codec: MediaCodec): "" | " Switching to MKV will grant support for this codec.";
 }
 /**
  * MP3-specific output options.
@@ -351,14 +312,8 @@ export type Mp3OutputFormatOptions = {
  * @public
  */
 export declare class Mp3OutputFormat extends OutputFormat {
-    /** @internal */
-    _options: Mp3OutputFormatOptions;
     /** Creates a new {@link Mp3OutputFormat} configured with the specified `options`. */
     constructor(options?: Mp3OutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): Mp3Muxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -398,14 +353,8 @@ export type WavOutputFormatOptions = {
  * @public
  */
 export declare class WavOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: WavOutputFormatOptions;
     /** Creates a new {@link WavOutputFormat} configured with the specified `options`. */
     constructor(options?: WavOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): WaveMuxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -439,14 +388,8 @@ export type OggOutputFormatOptions = {
  * @public
  */
 export declare class OggOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: OggOutputFormatOptions;
     /** Creates a new {@link OggOutputFormat} configured with the specified `options`. */
     constructor(options?: OggOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): OggMuxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -474,14 +417,8 @@ export type AdtsOutputFormatOptions = {
  * @public
  */
 export declare class AdtsOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: AdtsOutputFormatOptions;
     /** Creates a new {@link AdtsOutputFormat} configured with the specified `options`. */
     constructor(options?: AdtsOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): AdtsMuxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -515,14 +452,8 @@ export type FlacOutputFormatOptions = {
  * @public
  */
 export declare class FlacOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: FlacOutputFormatOptions;
     /** Creates a new {@link FlacOutputFormat} configured with the specified `options`. */
     constructor(options?: FlacOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): FlacMuxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -550,14 +481,8 @@ export type MpegTsOutputFormatOptions = {
  * @public
  */
 export declare class MpegTsOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: MpegTsOutputFormatOptions;
     /** Creates a new {@link MpegTsOutputFormat} configured with the specified `options`. */
     constructor(options?: MpegTsOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): MpegTsMuxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -702,21 +627,13 @@ export type HlsOutputFormatOptions = {
  * @public
  */
 export declare class HlsOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: HlsOutputFormatOptions;
     /** Creates a new {@link HlsOutputFormat} configured with the specified `options`. */
     constructor(options: HlsOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): Muxer;
-    /** @internal */
-    get _name(): string;
     get fileExtension(): string;
     get mimeType(): string;
     getSupportedCodecs(): MediaCodec[];
     getSupportedTrackCounts(): TrackCountLimits;
     get supportsVideoRotationMetadata(): boolean;
     get supportsTimestampedMediaData(): boolean;
-    /** @internal */
-    _codecUnsupportedHint(codec: MediaCodec): string;
 }
 //# sourceMappingURL=output-format.d.ts.map

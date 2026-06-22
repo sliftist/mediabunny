@@ -5,39 +5,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AudioCodec, MediaCodec, SubtitleCodec, VideoCodec } from './codec';
-import { OutputAudioTrack, OutputSubtitleTrack, OutputTrack, OutputVideoTrack } from './output';
-import { EncodedPacket } from './packet';
-import { AudioSample, VideoSample } from './sample';
-import { AudioEncodingConfig, VideoEncodingConfig } from './encode';
+import { AudioCodec, SubtitleCodec, VideoCodec } from './codec.js';
+import { EncodedPacket } from './packet.js';
+import { AudioSample, VideoSample } from './sample.js';
+import { AudioEncodingConfig, VideoEncodingConfig } from './encode.js';
 /**
  * Base class for media sources. Media sources are used to add media samples to an output file.
  * @group Media sources
  * @public
  */
 export declare abstract class MediaSource {
-    /** @internal */
-    abstract readonly _codec: MediaCodec;
-    /** @internal */
-    _connectedTrack: OutputTrack | null;
-    /** @internal */
-    _closingPromise: Promise<void> | null;
-    /** @internal */
-    _closed: boolean;
-    /** @internal */
-    _ensureValidAdd(): void;
-    /** @internal */
-    _start(): Promise<void>;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
     /**
      * Closes this source. This prevents future samples from being added and signals to the output file that no further
      * samples will come in for this track. Calling `.close()` is optional but recommended after adding the
      * last sample - for improved performance and reduced memory usage.
      */
     close(): void;
-    /** @internal */
-    _flushOrWaitForOngoingClose(forceClose: boolean): Promise<void>;
 }
 /**
  * Base class for video sources - sources for video tracks.
@@ -45,10 +28,6 @@ export declare abstract class MediaSource {
  * @public
  */
 export declare abstract class VideoSource extends MediaSource {
-    /** @internal */
-    _connectedTrack: OutputVideoTrack | null;
-    /** @internal */
-    readonly _codec: VideoCodec;
     /** Internal constructor. */
     constructor(codec: VideoCodec);
 }
@@ -109,8 +88,6 @@ export declare class ColorAlphaSplitter {
  * @public
  */
 export declare class VideoSampleSource extends VideoSource {
-    /** @internal */
-    private _encoder;
     /**
      * Creates a new {@link VideoSampleSource} whose samples are encoded according to the specified
      * {@link VideoEncodingConfig}.
@@ -123,8 +100,6 @@ export declare class VideoSampleSource extends VideoSource {
      * to respect writer and encoder backpressure.
      */
     add(videoSample: VideoSample, encodeOptions?: VideoEncoderEncodeOptions): Promise<void>;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
 /**
  * This source can be used to add video frames to the output track from a fixed canvas element. Since canvases are often
@@ -133,10 +108,6 @@ export declare class VideoSampleSource extends VideoSource {
  * @public
  */
 export declare class CanvasSource extends VideoSource {
-    /** @internal */
-    private _encoder;
-    /** @internal */
-    private _canvas;
     /**
      * Creates a new {@link CanvasSource} from a canvas element or `OffscreenCanvas` whose samples are encoded
      * according to the specified {@link VideoEncodingConfig}.
@@ -152,8 +123,6 @@ export declare class CanvasSource extends VideoSource {
      * to respect writer and encoder backpressure.
      */
     add(timestamp: number, duration?: number, encodeOptions?: VideoEncoderEncodeOptions): Promise<void>;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
 /**
  * Options for {@link MediaStreamVideoTrackSource}.
@@ -194,30 +163,6 @@ export type MediaStreamVideoTrackSourceOptions = {
  * @public
  */
 export declare class MediaStreamVideoTrackSource extends VideoSource {
-    /** @internal */
-    private _options;
-    /** @internal */
-    private _encoder;
-    /** @internal */
-    private _abortController;
-    /** @internal */
-    private _track;
-    /** @internal */
-    private _workerTrackId;
-    /** @internal */
-    private _workerListener;
-    /** @internal */
-    private _promiseWithResolvers;
-    /** @internal */
-    private _errorPromiseAccessed;
-    /** @internal */
-    private _paused;
-    /** @internal */
-    private _lastVideoFrame;
-    /** @internal */
-    private _timerHandle;
-    /** @internal */
-    private _videoElement;
     /** A promise that rejects upon any error within this source. This promise never resolves. */
     get errorPromise(): Promise<void>;
     /** Whether this source is currently paused as a result of calling `.pause()`. */
@@ -228,8 +173,6 @@ export declare class MediaStreamVideoTrackSource extends VideoSource {
      * video samples from the stream in real time and encode them according to {@link VideoEncodingConfig}.
      */
     constructor(track: MediaStreamVideoTrack, encodingConfig: VideoEncodingConfig, options?: MediaStreamVideoTrackSourceOptions);
-    /** @internal */
-    _start(): Promise<void>;
     /**
      * Pauses the capture of video frames - any video frames emitted by the underlying media stream will be ignored
      * while paused. This does *not* close the underlying `MediaStreamVideoTrack`, it just ignores its output.
@@ -237,8 +180,6 @@ export declare class MediaStreamVideoTrackSource extends VideoSource {
     pause(): void;
     /** Resumes the capture of video frames after being paused. */
     resume(): void;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
 /**
  * Base class for audio sources - sources for audio tracks.
@@ -246,10 +187,6 @@ export declare class MediaStreamVideoTrackSource extends VideoSource {
  * @public
  */
 export declare abstract class AudioSource extends MediaSource {
-    /** @internal */
-    _connectedTrack: OutputAudioTrack | null;
-    /** @internal */
-    readonly _codec: AudioCodec;
     /** Internal constructor. */
     constructor(codec: AudioCodec);
 }
@@ -279,8 +216,6 @@ export declare class EncodedAudioPacketSource extends AudioSource {
  * @public
  */
 export declare class AudioSampleSource extends AudioSource {
-    /** @internal */
-    private _encoder;
     /**
      * Creates a new {@link AudioSampleSource} whose samples are encoded according to the specified
      * {@link AudioEncodingConfig}.
@@ -293,8 +228,6 @@ export declare class AudioSampleSource extends AudioSource {
      * to respect writer and encoder backpressure.
      */
     add(audioSample: AudioSample): Promise<void>;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
 /**
  * This source can be used to add audio data from an AudioBuffer to the output track. This is useful when working with
@@ -303,10 +236,6 @@ export declare class AudioSampleSource extends AudioSource {
  * @public
  */
 export declare class AudioBufferSource extends AudioSource {
-    /** @internal */
-    private _encoder;
-    /** @internal */
-    private _accumulatedTime;
     /**
      * Creates a new {@link AudioBufferSource} whose `AudioBuffer` instances are encoded according to the specified
      * {@link AudioEncodingConfig}.
@@ -321,8 +250,6 @@ export declare class AudioBufferSource extends AudioSource {
      * to respect writer and encoder backpressure.
      */
     add(audioBuffer: AudioBuffer): Promise<void>;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
 /**
  * Options for {@link MediaStreamAudioTrackSource}.
@@ -356,24 +283,6 @@ export type MediaStreamAudioTrackSourceOptions = {
  * @public
  */
 export declare class MediaStreamAudioTrackSource extends AudioSource {
-    /** @internal */
-    private _options;
-    /** @internal */
-    private _encoder;
-    /** @internal */
-    private _abortController;
-    /** @internal */
-    private _track;
-    /** @internal */
-    private _audioContext;
-    /** @internal */
-    private _scriptProcessorNode;
-    /** @internal */
-    private _promiseWithResolvers;
-    /** @internal */
-    private _errorPromiseAccessed;
-    /** @internal */
-    private _paused;
     /** A promise that rejects upon any error within this source. This promise never resolves. */
     get errorPromise(): Promise<void>;
     /** Whether this source is currently paused as a result of calling `.pause()`. */
@@ -383,8 +292,6 @@ export declare class MediaStreamAudioTrackSource extends AudioSource {
      * from the stream in real time and encode them according to {@link AudioEncodingConfig}.
      */
     constructor(track: MediaStreamAudioTrack, encodingConfig: AudioEncodingConfig, options?: MediaStreamAudioTrackSourceOptions);
-    /** @internal */
-    _start(): Promise<void>;
     /**
      * Pauses the capture of audio data - any audio data emitted by the underlying media stream will be ignored
      * while paused. This does *not* close the underlying `MediaStreamAudioTrack`, it just ignores its output.
@@ -392,8 +299,6 @@ export declare class MediaStreamAudioTrackSource extends AudioSource {
     pause(): void;
     /** Resumes the capture of audio data after being paused. */
     resume(): void;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
 /**
  * Base class for subtitle sources - sources for subtitle tracks.
@@ -401,10 +306,6 @@ export declare class MediaStreamAudioTrackSource extends AudioSource {
  * @public
  */
 export declare abstract class SubtitleSource extends MediaSource {
-    /** @internal */
-    _connectedTrack: OutputSubtitleTrack | null;
-    /** @internal */
-    readonly _codec: SubtitleCodec;
     /** Internal constructor. */
     constructor(codec: SubtitleCodec);
 }
@@ -414,12 +315,6 @@ export declare abstract class SubtitleSource extends MediaSource {
  * @public
  */
 export declare class TextSubtitleSource extends SubtitleSource {
-    /** @internal */
-    private _parser;
-    /** @internal */
-    private _error;
-    /** @internal */
-    private _lastMuxerPromise;
     /** Creates a new {@link TextSubtitleSource} where added text chunks are in the specified `codec`. */
     constructor(codec: SubtitleCodec);
     /**
@@ -430,9 +325,5 @@ export declare class TextSubtitleSource extends SubtitleSource {
      * to respect writer and encoder backpressure.
      */
     add(text: string): Promise<void>;
-    /** @internal */
-    _checkForError(): void;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
 //# sourceMappingURL=media-source.d.ts.map

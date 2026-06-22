@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { assert } from './misc';
-import { readBytes } from './reader';
+import { assert } from './misc.js';
+import { readBytes } from './reader.js';
 // Inspired in part by https://github.com/halloweeks/AES-128-CBC/blob/main/AES_128_CBC.h
 export const AES_128_BLOCK_SIZE = 16;
 const Te4 = new Uint32Array(256);

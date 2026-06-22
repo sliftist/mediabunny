@@ -5,21 +5,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { SAMPLES_PER_AAC_FRAME } from '../adts/adts-demuxer';
-import { MAX_ADTS_FRAME_HEADER_SIZE, readAdtsFrameHeader } from '../adts/adts-reader';
-import { aacChannelMap, aacFrequencyTable } from '../../shared/aac-misc';
-import { extractAudioCodecString, extractVideoCodecString, } from '../codec';
-import { AC3_ACMOD_CHANNEL_COUNTS, AC3_SAMPLES_PER_FRAME, AvcNalUnitType, determineVideoPacketType, extractAvcDecoderConfigurationRecord, extractHevcDecoderConfigurationRecord, EAC3_NUMBLKS_TABLE, getEac3ChannelCount, getEac3SampleRate, HevcNalUnitType, parseAc3SyncFrame, parseAvcSps, parseEac3SyncFrame, parseHevcSps, AC3_FRAME_SIZES, extractNalUnitTypeForAvc, extractNalUnitTypeForHevc, } from '../codec-data';
-import { Demuxer } from '../demuxer';
-import { Logging } from '../logging';
-import { DEFAULT_TRACK_DISPOSITION } from '../metadata';
-import { assert, binarySearchExact, binarySearchLessOrEqual, COLOR_PRIMARIES_MAP_INVERSE, findLastIndex, floorToMultiple, last, MATRIX_COEFFICIENTS_MAP_INVERSE, readExpGolomb, roundIfAlmostInteger, toDataView, TRANSFER_CHARACTERISTICS_MAP_INVERSE, UNDETERMINED_LANGUAGE, } from '../misc';
-import { MP3_FRAME_HEADER_SIZE, getMp3ChannelCount, readMp3FrameHeader, } from '../../shared/mp3-misc';
-import { EncodedPacket, PLACEHOLDER_DATA } from '../packet';
-import { FileSlice, readBytes, readU16Be, readU32Be, readU8 } from '../reader';
-import { buildMpegTsMimeType, TIMESCALE, TS_PACKET_SIZE } from './mpeg-ts-misc';
-import { AC3_SAMPLE_RATES } from '../../shared/ac3-misc';
-import { Bitstream } from '../../shared/bitstream';
+import { SAMPLES_PER_AAC_FRAME } from '../adts/adts-demuxer.js';
+import { MAX_ADTS_FRAME_HEADER_SIZE, readAdtsFrameHeader } from '../adts/adts-reader.js';
+import { aacChannelMap, aacFrequencyTable } from '../../shared/aac-misc.js';
+import { extractAudioCodecString, extractVideoCodecString, } from '../codec.js';
+import { AC3_ACMOD_CHANNEL_COUNTS, AC3_SAMPLES_PER_FRAME, AvcNalUnitType, determineVideoPacketType, extractAvcDecoderConfigurationRecord, extractHevcDecoderConfigurationRecord, EAC3_NUMBLKS_TABLE, getEac3ChannelCount, getEac3SampleRate, HevcNalUnitType, parseAc3SyncFrame, parseAvcSps, parseEac3SyncFrame, parseHevcSps, AC3_FRAME_SIZES, extractNalUnitTypeForAvc, extractNalUnitTypeForHevc, } from '../codec-data.js';
+import { Demuxer } from '../demuxer.js';
+import { Logging } from '../logging.js';
+import { DEFAULT_TRACK_DISPOSITION } from '../metadata.js';
+import { assert, binarySearchExact, binarySearchLessOrEqual, COLOR_PRIMARIES_MAP_INVERSE, findLastIndex, floorToMultiple, last, MATRIX_COEFFICIENTS_MAP_INVERSE, readExpGolomb, roundIfAlmostInteger, toDataView, TRANSFER_CHARACTERISTICS_MAP_INVERSE, UNDETERMINED_LANGUAGE, } from '../misc.js';
+import { MP3_FRAME_HEADER_SIZE, getMp3ChannelCount, readMp3FrameHeader, } from '../../shared/mp3-misc.js';
+import { EncodedPacket, PLACEHOLDER_DATA } from '../packet.js';
+import { FileSlice, readBytes, readU16Be, readU32Be, readU8 } from '../reader.js';
+import { buildMpegTsMimeType, TIMESCALE, TS_PACKET_SIZE } from './mpeg-ts-misc.js';
+import { AC3_SAMPLE_RATES } from '../../shared/ac3-misc.js';
+import { Bitstream } from '../../shared/bitstream.js';
 // Resources:
 // ISO/IEC 13818-1
 const MISSING_PTS_ERROR_MESSAGE = 'PES packet is missing PTS where it was expected. PES packets without PTS are not'

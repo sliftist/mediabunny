@@ -57,15 +57,15 @@ var __disposeResources = (this && this.__disposeResources) || (function (Suppres
     var e = new Error(message);
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 });
-import { AES_128_BLOCK_SIZE, createAes128CbcDecryptStream } from '../aes';
-import { ENCRYPTION_KEY_CACHE_GROUP, Input } from '../input';
-import { SegmentedInput } from '../segmented-input';
-import { toDataView, joinPaths, last, assert, binarySearchLessOrEqual, arrayArgmin, wait, base64ToBytes, } from '../misc';
-import { readAllLines, readBytes, Reader } from '../reader';
-import { CustomPathedSource, PathedSource, ReadableStreamSource } from '../source';
-import { AttributeList, canIgnoreLine, TAG_BYTERANGE, TAG_DISCONTINUITY, TAG_ENDLIST, TAG_EXTINF, TAG_KEY, TAG_MAP, TAG_MEDIA_SEQUENCE, TAG_PLAYLIST_TYPE, TAG_PROGRAM_DATE_TIME, TAG_TARGETDURATION, } from './hls-misc';
-import { HlsInputFormat } from '../input-format';
-import { parsePsshBoxContents, psshBoxesAreEqual } from '../isobmff/isobmff-misc';
+import { AES_128_BLOCK_SIZE, createAes128CbcDecryptStream } from '../aes.js';
+import { ENCRYPTION_KEY_CACHE_GROUP, Input } from '../input.js';
+import { SegmentedInput } from '../segmented-input.js';
+import { toDataView, joinPaths, last, assert, binarySearchLessOrEqual, arrayArgmin, wait, base64ToBytes, } from '../misc.js';
+import { readAllLines, readBytes, Reader } from '../reader.js';
+import { CustomPathedSource, PathedSource, ReadableStreamSource } from '../source.js';
+import { AttributeList, canIgnoreLine, TAG_BYTERANGE, TAG_DISCONTINUITY, TAG_ENDLIST, TAG_EXTINF, TAG_KEY, TAG_MAP, TAG_MEDIA_SEQUENCE, TAG_PLAYLIST_TYPE, TAG_PROGRAM_DATE_TIME, TAG_TARGETDURATION, } from './hls-misc.js';
+import { HlsInputFormat } from '../input-format.js';
+import { parsePsshBoxContents, psshBoxesAreEqual } from '../isobmff/isobmff-misc.js';
 const IV_STRING_REGEX = /^0[xX][0-9a-fA-F]+$/;
 const BASE64_DATA_URI_REGEX = /^data:.*;base64,/i;
 export class HlsSegmentedInput extends SegmentedInput {

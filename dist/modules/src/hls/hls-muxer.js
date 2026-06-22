@@ -5,15 +5,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { validateAudioChunkMetadata, validateVideoChunkMetadata } from '../codec';
-import { Logging } from '../logging';
-import { EncodedAudioPacketSource, EncodedVideoPacketSource } from '../media-source';
-import { arrayArgmax, assert, AsyncMutex, findLastIndex, joinPaths, textEncoder, toArray, UNDETERMINED_LANGUAGE, } from '../misc';
-import { Muxer } from '../muxer';
-import { Output, } from '../output';
-import { Writer } from '../writer';
-import { NullTarget, PathedTarget } from '../target';
-import { HLS_MIME_TYPE } from './hls-misc';
+import { validateAudioChunkMetadata, validateVideoChunkMetadata } from '../codec.js';
+import { Logging } from '../logging.js';
+import { EncodedAudioPacketSource, EncodedVideoPacketSource } from '../media-source.js';
+import { arrayArgmax, assert, AsyncMutex, findLastIndex, joinPaths, textEncoder, toArray, UNDETERMINED_LANGUAGE, } from '../misc.js';
+import { Muxer } from '../muxer.js';
+import { Output, } from '../output.js';
+import { Writer } from '../writer.js';
+import { NullTarget, PathedTarget } from '../target.js';
+import { HLS_MIME_TYPE } from './hls-misc.js';
 export class HlsMuxer extends Muxer {
     constructor(output, format) {
         if (!(output._target instanceof PathedTarget)) {

@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { SECOND_TO_MICROSECOND_FACTOR } from './misc';
+import { SECOND_TO_MICROSECOND_FACTOR } from './misc.js';
 export const PLACEHOLDER_DATA = /* #__PURE__ */ new Uint8Array(0);
 /**
  * Represents an encoded chunk of media. Mainly used as an expressive wrapper around WebCodecs API's

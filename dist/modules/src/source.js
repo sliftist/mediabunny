@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { assert, binarySearchLessOrEqual, clamp, closedIntervalsOverlap, isNumber, isWebKit, mergeRequestInit, normalizeHeaders, polyfillSymbolDispose, promiseWithResolvers, retriedFetch, toDataView, toUint8Array, wait, EventEmitter, } from './misc';
-import * as nodeAlias from './node';
-import { InputDisposedError } from './input';
-import { Logging } from './logging';
+import { assert, binarySearchLessOrEqual, clamp, closedIntervalsOverlap, isNumber, isWebKit, mergeRequestInit, normalizeHeaders, polyfillSymbolDispose, promiseWithResolvers, retriedFetch, toDataView, toUint8Array, wait, EventEmitter, } from './misc.js';
+import * as nodeAlias from './node.js';
+import { InputDisposedError } from './input.js';
+import { Logging } from './logging.js';
 polyfillSymbolDispose();
 const node = typeof nodeAlias !== 'undefined'
     ? nodeAlias // Aliasing it prevents some bundler warnings

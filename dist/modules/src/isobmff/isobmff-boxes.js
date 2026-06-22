@@ -5,13 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { toUint8Array, assert, isU32, last, textEncoder, COLOR_PRIMARIES_MAP, TRANSFER_CHARACTERISTICS_MAP, MATRIX_COEFFICIENTS_MAP, colorSpaceIsComplete, UNDETERMINED_LANGUAGE, assertNever, keyValueIterator, } from '../misc';
-import { generateAv1CodecConfigurationFromCodecString, parsePcmCodec, PCM_AUDIO_CODECS, } from '../codec';
-import { formatSubtitleTimestamp } from '../subtitles';
-import { getTrackMetadata, GLOBAL_TIMESCALE, intoTimescale, } from './isobmff-muxer';
-import { parseAc3SyncFrame, parseEac3SyncFrame, parseOpusIdentificationHeader } from '../codec-data';
-import { RichImageData } from '../metadata';
-import { Bitstream } from '../../shared/bitstream';
+import { toUint8Array, assert, isU32, last, textEncoder, COLOR_PRIMARIES_MAP, TRANSFER_CHARACTERISTICS_MAP, MATRIX_COEFFICIENTS_MAP, colorSpaceIsComplete, UNDETERMINED_LANGUAGE, assertNever, keyValueIterator, } from '../misc.js';
+import { generateAv1CodecConfigurationFromCodecString, parsePcmCodec, PCM_AUDIO_CODECS, } from '../codec.js';
+import { formatSubtitleTimestamp } from '../subtitles.js';
+import { getTrackMetadata, GLOBAL_TIMESCALE, intoTimescale, } from './isobmff-muxer.js';
+import { parseAc3SyncFrame, parseEac3SyncFrame, parseOpusIdentificationHeader } from '../codec-data.js';
+import { RichImageData } from '../metadata.js';
+import { Bitstream } from '../../shared/bitstream.js';
 export class IsobmffBoxWriter {
     constructor(writer) {
         this.writer = writer;

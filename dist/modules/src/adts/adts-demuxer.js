@@ -5,14 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { aacChannelMap, aacFrequencyTable } from '../../shared/aac-misc';
-import { Demuxer } from '../demuxer';
-import { ID3_V2_HEADER_SIZE, parseId3V2Tag, readId3V2Header, } from '../id3';
-import { DEFAULT_TRACK_DISPOSITION } from '../metadata';
-import { assert, AsyncMutex, binarySearchExact, binarySearchLessOrEqual, UNDETERMINED_LANGUAGE, } from '../misc';
-import { EncodedPacket, PLACEHOLDER_DATA } from '../packet';
-import { readBytes } from '../reader';
-import { MIN_ADTS_FRAME_HEADER_SIZE, MAX_ADTS_FRAME_HEADER_SIZE, readAdtsFrameHeader, } from './adts-reader';
+import { aacChannelMap, aacFrequencyTable } from '../../shared/aac-misc.js';
+import { Demuxer } from '../demuxer.js';
+import { ID3_V2_HEADER_SIZE, parseId3V2Tag, readId3V2Header, } from '../id3.js';
+import { DEFAULT_TRACK_DISPOSITION } from '../metadata.js';
+import { assert, AsyncMutex, binarySearchExact, binarySearchLessOrEqual, UNDETERMINED_LANGUAGE, } from '../misc.js';
+import { EncodedPacket, PLACEHOLDER_DATA } from '../packet.js';
+import { readBytes } from '../reader.js';
+import { MIN_ADTS_FRAME_HEADER_SIZE, MAX_ADTS_FRAME_HEADER_SIZE, readAdtsFrameHeader, } from './adts-reader.js';
 export const SAMPLES_PER_AAC_FRAME = 1024;
 export class AdtsDemuxer extends Demuxer {
     constructor(input) {

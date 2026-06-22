@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { FileSlice } from '../reader';
+import { FileSlice } from '../reader.js';
 export declare const MIN_ADTS_FRAME_HEADER_SIZE = 7;
 export declare const MAX_ADTS_FRAME_HEADER_SIZE = 9;
 export type AdtsFrameHeader = {

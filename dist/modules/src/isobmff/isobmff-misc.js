@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { bytesToHexString, toDataView, uint8ArraysAreEqual } from '../misc';
+import { bytesToHexString, toDataView, uint8ArraysAreEqual } from '../misc.js';
 export const buildIsobmffMimeType = (info) => {
     const base = info.hasVideo
         ? 'video/'

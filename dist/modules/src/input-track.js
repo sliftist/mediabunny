@@ -5,12 +5,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { determineVideoPacketType } from './codec-data';
-import { customAudioDecoders, customVideoDecoders } from './custom-coder';
-import { Logging } from './logging';
-import { EncodedPacketSink } from './media-sink';
-import { assert, roundToDivisor, simplifyRational } from './misc';
-import { EncodedPacket } from './packet';
+import { determineVideoPacketType } from './codec-data.js';
+import { customAudioDecoders, customVideoDecoders } from './custom-coder.js';
+import { Logging } from './logging.js';
+import { EncodedPacketSink } from './media-sink.js';
+import { assert, roundToDivisor, simplifyRational } from './misc.js';
+import { EncodedPacket } from './packet.js';
 /**
  * Represents a media track in an input file.
  * @group Input files & tracks

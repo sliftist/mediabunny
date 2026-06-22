@@ -5,14 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AUDIO_CODECS, inferCodecFromCodecString, VIDEO_CODECS } from '../codec';
-import { Demuxer } from '../demuxer';
-import { DEFAULT_TRACK_DISPOSITION } from '../metadata';
-import { assert, joinPaths, UNDETERMINED_LANGUAGE } from '../misc';
-import { readAllLines } from '../reader';
-import { AttributeList, canIgnoreLine, HLS_MIME_TYPE, TAG_EXTINF, TAG_I_FRAME_STREAM_INF, TAG_I_FRAMES_ONLY, TAG_MEDIA, TAG_STREAM_INF, } from './hls-misc';
-import { HlsSegmentedInput } from './hls-segmented-input';
-import { PathedSource } from '../source';
+import { AUDIO_CODECS, inferCodecFromCodecString, VIDEO_CODECS } from '../codec.js';
+import { Demuxer } from '../demuxer.js';
+import { DEFAULT_TRACK_DISPOSITION } from '../metadata.js';
+import { assert, joinPaths, UNDETERMINED_LANGUAGE } from '../misc.js';
+import { readAllLines } from '../reader.js';
+import { AttributeList, canIgnoreLine, HLS_MIME_TYPE, TAG_EXTINF, TAG_I_FRAME_STREAM_INF, TAG_I_FRAMES_ONLY, TAG_MEDIA, TAG_STREAM_INF, } from './hls-misc.js';
+import { HlsSegmentedInput } from './hls-segmented-input.js';
+import { PathedSource } from '../source.js';
 export class HlsDemuxer extends Demuxer {
     constructor(input) {
         super(input);

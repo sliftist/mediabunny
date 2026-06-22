@@ -57,8 +57,8 @@ var __disposeResources = (this && this.__disposeResources) || (function (Suppres
     var e = new Error(message);
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 });
-import { assert, clamp, COLOR_PRIMARIES_MAP, isAllowSharedBufferSource, MATRIX_COEFFICIENTS_MAP, SECOND_TO_MICROSECOND_FACTOR, toDataView, toUint8Array, TRANSFER_CHARACTERISTICS_MAP, isFirefox, polyfillSymbolDispose, assertNever, isWebKit, simplifyRational, validateRectangle, normalizeRotation, roundToMultiple, arrayArgmin, } from './misc';
-import { Logging } from './logging';
+import { assert, clamp, COLOR_PRIMARIES_MAP, isAllowSharedBufferSource, MATRIX_COEFFICIENTS_MAP, SECOND_TO_MICROSECOND_FACTOR, toDataView, toUint8Array, TRANSFER_CHARACTERISTICS_MAP, isFirefox, polyfillSymbolDispose, assertNever, isWebKit, simplifyRational, validateRectangle, normalizeRotation, roundToMultiple, arrayArgmin, } from './misc.js';
+import { Logging } from './logging.js';
 polyfillSymbolDispose();
 // Let's manually handle logging the garbage collection errors that are typically logged by the browser. This way, they
 // also kick for audio samples (which is normally not the case), making sure any incorrect code is quickly caught.

@@ -5,14 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Demuxer } from '../demuxer';
-import { Input } from '../input';
-import { InputAudioTrackBacking } from '../input-track';
-import { PacketRetrievalOptions } from '../media-sink';
-import { AsyncMutex } from '../misc';
-import { EncodedPacket } from '../packet';
-import { FileSlice, Reader } from '../reader';
-import { MetadataTags } from '../metadata';
+import { Demuxer } from '../demuxer.js';
+import { Input } from '../input.js';
+import { InputAudioTrackBacking } from '../input-track.js';
+import { PacketRetrievalOptions } from '../media-sink.js';
+import { AsyncMutex } from '../misc.js';
+import { EncodedPacket } from '../packet.js';
+import { FileSlice, Reader } from '../reader.js';
+import { MetadataTags } from '../metadata.js';
 type FlacAudioInfo = {
     numberOfChannels: number;
     sampleRate: number;

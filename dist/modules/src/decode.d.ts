@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AudioCodec, MediaCodec, VideoCodec } from './codec';
-import { SetOptional } from './misc';
+import { AudioCodec, MediaCodec, VideoCodec } from './codec.js';
+import { SetOptional } from './misc.js';
 export declare const canDecodeVideoMemo: Map<string, Promise<boolean>>;
 export declare const canDecodeAudioMemo: Map<string, Promise<boolean>>;
 /**

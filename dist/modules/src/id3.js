@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { decodeSynchsafe, encodeSynchsafe } from '../shared/mp3-misc';
-import { Logging } from './logging';
-import { coalesceIndex, textDecoder, textEncoder, isIso88591Compatible, assertNever, keyValueIterator, toDataView, isRecordStringString, } from './misc';
-import { readAscii, readBytes, readU32Be, readU8 } from './reader';
+import { decodeSynchsafe, encodeSynchsafe } from '../shared/mp3-misc.js';
+import { Logging } from './logging.js';
+import { coalesceIndex, textDecoder, textEncoder, isIso88591Compatible, assertNever, keyValueIterator, toDataView, isRecordStringString, } from './misc.js';
+import { readAscii, readBytes, readU32Be, readU8 } from './reader.js';
 export var Id3V2HeaderFlags;
 (function (Id3V2HeaderFlags) {
     Id3V2HeaderFlags[Id3V2HeaderFlags["Unsynchronisation"] = 128] = "Unsynchronisation";

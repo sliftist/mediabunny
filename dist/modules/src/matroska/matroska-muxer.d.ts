@@ -5,11 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { MkvOutputFormat } from '../output-format';
-import { Output, OutputAudioTrack, OutputSubtitleTrack, OutputTrack, OutputVideoTrack } from '../output';
-import { SubtitleCue, SubtitleMetadata } from '../subtitles';
-import { Muxer } from '../muxer';
-import { EncodedPacket } from '../packet';
+import { MkvOutputFormat } from '../output-format.js';
+import { Output, OutputAudioTrack, OutputSubtitleTrack, OutputTrack, OutputVideoTrack } from '../output.js';
+import { SubtitleCue, SubtitleMetadata } from '../subtitles.js';
+import { Muxer } from '../muxer.js';
+import { EncodedPacket } from '../packet.js';
 export declare class MatroskaMuxer extends Muxer {
     private writer;
     private ebmlWriter;

@@ -5,9 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AUDIO_CODECS, buildAudioCodecString, buildVideoCodecString, guessDescriptionForAudio, guessDescriptionForVideo, inferCodecFromCodecString, PCM_AUDIO_CODECS, VIDEO_CODECS, } from './codec';
-import { customAudioDecoders, customVideoDecoders } from './custom-coder';
-import { isAllowSharedBufferSource } from './misc';
+import { AUDIO_CODECS, buildAudioCodecString, buildVideoCodecString, guessDescriptionForAudio, guessDescriptionForVideo, inferCodecFromCodecString, PCM_AUDIO_CODECS, VIDEO_CODECS, } from './codec.js';
+import { customAudioDecoders, customVideoDecoders } from './custom-coder.js';
+import { isAllowSharedBufferSource } from './misc.js';
 export const canDecodeVideoMemo = new Map();
 export const canDecodeAudioMemo = new Map();
 const validateVideoDecodingConfig = (codec, options) => {

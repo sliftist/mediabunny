@@ -5,12 +5,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { toDataView } from '../misc';
-import { metadataTagsAreEmpty } from '../metadata';
-import { Muxer } from '../muxer';
-import { getXingOffset, INFO, readMp3FrameHeader, XING } from '../../shared/mp3-misc';
-import { Mp3Writer } from './mp3-writer';
-import { Id3V2Writer } from '../id3';
+import { toDataView } from '../misc.js';
+import { metadataTagsAreEmpty } from '../metadata.js';
+import { Muxer } from '../muxer.js';
+import { getXingOffset, INFO, readMp3FrameHeader, XING } from '../../shared/mp3-misc.js';
+import { Mp3Writer } from './mp3-writer.js';
+import { Id3V2Writer } from '../id3.js';
 export class Mp3Muxer extends Muxer {
     constructor(output, format) {
         super(output);

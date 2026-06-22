@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { assert, assertNever, textDecoder, textEncoder } from '../misc';
-import { readBytes, readF32Be, readF64Be, readU8 } from '../reader';
+import { assert, assertNever, textDecoder, textEncoder } from '../misc.js';
+import { readBytes, readF32Be, readF64Be, readU8 } from '../reader.js';
 /** Wrapper around a number to be able to differentiate it in the writer. */
 export class EBMLFloat32 {
     constructor(value) {

@@ -5,15 +5,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { FlacBlockType, readVorbisComments } from '../codec-data';
-import { Demuxer } from '../demuxer';
-import { assert, AsyncMutex, binarySearchLessOrEqual, textDecoder, UNDETERMINED_LANGUAGE, } from '../misc';
-import { EncodedPacket, PLACEHOLDER_DATA } from '../packet';
-import { readBytes, readU24Be, readU32Be, readU8, } from '../reader';
-import { DEFAULT_TRACK_DISPOSITION } from '../metadata';
-import { calculateCrc8, readBlockSize, getBlockSizeOrUncommon, readCodedNumber, readSampleRate, getSampleRateOrUncommon, } from './flac-misc';
-import { Bitstream } from '../../shared/bitstream';
-import { ID3_V2_HEADER_SIZE, parseId3V2Tag, readId3V2Header } from '../id3';
+import { FlacBlockType, readVorbisComments } from '../codec-data.js';
+import { Demuxer } from '../demuxer.js';
+import { assert, AsyncMutex, binarySearchLessOrEqual, textDecoder, UNDETERMINED_LANGUAGE, } from '../misc.js';
+import { EncodedPacket, PLACEHOLDER_DATA } from '../packet.js';
+import { readBytes, readU24Be, readU32Be, readU8, } from '../reader.js';
+import { DEFAULT_TRACK_DISPOSITION } from '../metadata.js';
+import { calculateCrc8, readBlockSize, getBlockSizeOrUncommon, readCodedNumber, readSampleRate, getSampleRateOrUncommon, } from './flac-misc.js';
+import { Bitstream } from '../../shared/bitstream.js';
+import { ID3_V2_HEADER_SIZE, parseId3V2Tag, readId3V2Header } from '../id3.js';
 export class FlacDemuxer extends Demuxer {
     constructor(input) {
         super(input);

@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Rotation, SetRequired, Rational, Rectangle, MaybePromise, DeepReadonly } from './misc';
+import { Rotation, SetRequired, Rational, Rectangle, MaybePromise, DeepReadonly } from './misc.js';
 /**
  * Abstract base class for custom video sample resources. Implement this class to provide custom backing
  * for VideoSample instances.
@@ -13,10 +13,6 @@ import { Rotation, SetRequired, Rational, Rectangle, MaybePromise, DeepReadonly 
  * @public
  */
 export declare abstract class VideoSampleResource {
-    /** @internal */
-    _referenceCount: number;
-    /** @internal */
-    _lastAllocationBuffer: ArrayBuffer | null;
     /**
      * Returns the internal pixel format in which the frame is stored.
      * [See pixel formats](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/format)
@@ -106,8 +102,6 @@ export type VideoSampleInit = {
     displayHeight?: number | undefined;
     /** The encode options to use when this sample is passed to an encoder. */
     encodeOptions?: DeepReadonly<VideoEncoderEncodeOptions>;
-    /** @internal */
-    _doNotCopy?: boolean;
 };
 /**
  * Represents a raw, unencoded video sample (frame). Mainly used as an expressive wrapper around WebCodecs API's
@@ -116,15 +110,6 @@ export type VideoSampleInit = {
  * @public
  */
 export declare class VideoSample implements Disposable {
-    /** @internal */
-    _data: VideoFrame | OffscreenCanvas | Uint8Array | VideoSampleResource | null;
-    /**
-     * Used for the ArrayBuffer-backed case.
-     * @internal
-     */
-    _layout: PlaneLayout[] | null;
-    /** @internal */
-    _closed: boolean;
     /**
      * The internal pixel format in which the frame is stored. Will be `null` if it's using an arbitrary internal
      * format not representable by `VideoSamplePixelFormat`.
@@ -262,13 +247,6 @@ export declare class VideoSample implements Disposable {
          */
         crop?: CropRectangle;
     }): void;
-    /** @internal */
-    _rotateSourceRegion(sx: number, sy: number, sWidth: number, sHeight: number, rotation: number): {
-        sx: number;
-        sy: number;
-        sWidth: number;
-        sHeight: number;
-    };
     /**
      * Converts this video sample to a
      * [`CanvasImageSource`](https://udn.realityripple.com/docs/Web/API/CanvasImageSource) for drawing to a canvas.
@@ -437,8 +415,6 @@ export declare const getPlaneConfigs: (format: VideoSamplePixelFormat) => PlaneC
  * @public
  */
 export declare abstract class AudioSampleResource {
-    /** @internal */
-    _referenceCount: number;
     /**
      * Returns the audio sample format.
      * [See sample formats](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/format)
@@ -512,10 +488,6 @@ export type AudioSampleCopyToOptions = {
  * @public
  */
 export declare class AudioSample implements Disposable {
-    /** @internal */
-    _data: AudioData | Uint8Array | AudioSampleResource;
-    /** @internal */
-    _closed: boolean;
     /**
      * The audio sample format.
      * [See sample formats](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/format)
@@ -568,16 +540,12 @@ export declare class AudioSample implements Disposable {
      * method *must* be closed separately from this audio sample.
      */
     toAudioData(): AudioData;
-    /** @internal */
-    _createAudioDataFromData(): AudioData;
     /** Convert this audio sample to an AudioBuffer for use with the Web Audio API. */
     toAudioBuffer(): AudioBuffer;
     /** Sets the presentation timestamp of this audio sample, in seconds. */
     setTimestamp(newTimestamp: number): void;
     /** Calls `.close()`. */
     [Symbol.dispose](): void;
-    /** @internal */
-    static _fromAudioBuffer(audioBuffer: AudioBuffer, timestamp: number): Generator<AudioSample, void, unknown>;
     /**
      * Creates AudioSamples from an AudioBuffer, starting at the given timestamp in seconds. Typically creates exactly
      * one sample, but may create multiple if the AudioBuffer is exceedingly large.

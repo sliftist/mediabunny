@@ -5,13 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AacCodecInfo, AudioCodec, VideoCodec } from '../codec';
-import { AvcDecoderConfigurationRecord, HevcDecoderConfigurationRecord } from '../codec-data';
-import { Demuxer } from '../demuxer';
-import { Input } from '../input';
-import { InputTrackBacking } from '../input-track';
-import { MetadataTags } from '../metadata';
-import { Reader } from '../reader';
+import { AacCodecInfo, AudioCodec, VideoCodec } from '../codec.js';
+import { AvcDecoderConfigurationRecord, HevcDecoderConfigurationRecord } from '../codec-data.js';
+import { Demuxer } from '../demuxer.js';
+import { Input } from '../input.js';
+import { InputTrackBacking } from '../input-track.js';
+import { MetadataTags } from '../metadata.js';
+import { Reader } from '../reader.js';
 type ElementaryStream = {
     demuxer: MpegTsDemuxer;
     pid: number;

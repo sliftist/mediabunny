@@ -5,8 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import type { FileHandle } from 'node:fs/promises';
-import { EventEmitter, FilePath, MaybePromise } from './misc';
+import { EventEmitter, FilePath, MaybePromise } from './misc.js';
 /**
  * The events emitted by a {@link Target}.
  * @group Output targets
@@ -29,20 +28,6 @@ export type TargetEvents = {
  * @public
  */
 export declare abstract class Target extends EventEmitter<TargetEvents> {
-    /** @internal */
-    _writerAcquired: boolean;
-    /** @internal */
-    _monotonicity: boolean | null;
-    /** @internal */
-    abstract _start(): void;
-    /** @internal */
-    abstract _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    abstract _flush(): Promise<void>;
-    /** @internal */
-    abstract _finalize(): Promise<void>;
-    /** @internal */
-    abstract _close(): Promise<void>;
     /**
      * Called each time data is written to the target. Will be called with the byte range into which data was written.
      *
@@ -52,10 +37,6 @@ export declare abstract class Target extends EventEmitter<TargetEvents> {
      * @deprecated Use `target.on('write', ({ start, end }) => ...)` instead.
      */
     onwrite: ((start: number, end: number) => unknown) | null;
-    /** @internal */
-    _setMonotonicity(monotonicity: boolean): void;
-    /** @internal */
-    _dispatchWrite(start: number, end: number): void;
     /**
      * Returns a new {@link RangedTarget} that writes data to this target using the given offset.
      *
@@ -87,32 +68,8 @@ export type BufferTargetOptions = {
 export declare class BufferTarget extends Target {
     /** Stores the final output buffer. Until the output is finalized, this will be `null`. */
     buffer: ArrayBuffer | null;
-    /** @internal */
-    _buffer: ArrayBuffer;
-    /** @internal */
-    _bytes: Uint8Array;
-    /** @internal */
-    _maxPos: number;
-    /** @internal */
-    _supportsResize: boolean;
-    /** @internal */
-    _options: BufferTargetOptions;
     /** Creates a new {@link BufferTarget}. The buffer holding the data will be created and managed internally. */
     constructor(options?: BufferTargetOptions);
-    /** @internal */
-    _ensureSize(size: number): void;
-    /** @internal */
-    _start(): void;
-    /** @internal */
-    _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    _flush(): Promise<void>;
-    /** @internal */
-    _finalize(): Promise<void>;
-    /** @internal */
-    _close(): Promise<void>;
-    /** @internal */
-    _getSlice(start: number, end: number): Uint8Array<ArrayBuffer>;
 }
 /**
  * A data chunk for {@link StreamTarget}.
@@ -142,16 +99,6 @@ export type StreamTargetOptions = {
     /** When using `chunked: true`, this specifies the maximum size of each chunk. Defaults to 16 MiB. */
     chunkSize?: number;
 };
-type Chunk = {
-    start: number;
-    written: ChunkSection[];
-    data: Uint8Array<ArrayBuffer>;
-    shouldFlush: boolean;
-};
-type ChunkSection = {
-    start: number;
-    end: number;
-};
 /**
  * This target writes data to a [`WritableStream`](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream),
  * making it a general-purpose target for writing data anywhere. It is also compatible with
@@ -162,53 +109,8 @@ type ChunkSection = {
  * @public
  */
 export declare class StreamTarget extends Target {
-    /** @internal */
-    _writable: WritableStream<StreamTargetChunk>;
-    /** @internal */
-    _options: StreamTargetOptions;
-    /** @internal */
-    _sections: {
-        data: Uint8Array;
-        start: number;
-    }[];
-    /** @internal */
-    _lastWriteEnd: number;
-    /** @internal */
-    _lastFlushEnd: number;
-    /** @internal */
-    _streamWriter: WritableStreamDefaultWriter<StreamTargetChunk> | null;
-    /** @internal */
-    _writeError: unknown;
-    /** @internal */
-    _chunked: boolean;
-    /** @internal */
-    _chunkSize: number;
-    /**
-     * The data is divided up into fixed-size chunks, whose contents are first filled in RAM and then flushed out.
-     * A chunk is flushed if all of its contents have been written.
-     */
-    /** @internal */
-    _chunks: Chunk[];
     /** Creates a new {@link StreamTarget} which writes to the specified `writable`. */
     constructor(writable: WritableStream<StreamTargetChunk>, options?: StreamTargetOptions);
-    /** @internal */
-    _start(): void;
-    /** @internal */
-    _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    _flush(): Promise<void>;
-    /** @internal */
-    _writeDataIntoChunks(data: Uint8Array, position: number): void;
-    /** @internal */
-    _insertSectionIntoChunk(chunk: Chunk, section: ChunkSection): void;
-    /** @internal */
-    _createChunk(includesPosition: number): number;
-    /** @internal */
-    _tryToFlushChunks(force?: boolean): void;
-    /** @internal */
-    _finalize(): Promise<void>;
-    /** @internal */
-    _close(): Promise<void | undefined>;
 }
 /**
  * This target writes to a `WritableStream<Uint8Array>`, meaning all writes are necessarily append-only and involve no
@@ -222,27 +124,7 @@ export declare class StreamTarget extends Target {
  * @public
  */
 export declare class AppendOnlyStreamTarget extends Target {
-    /** @internal */
-    _writable: WritableStream<Uint8Array>;
-    /** @internal */
-    _streamTarget: StreamTarget;
-    /** @internal */
-    _writer: WritableStreamDefaultWriter<Uint8Array> | null;
-    /** @internal */
-    _nextWritePos: number;
     constructor(writable: WritableStream<Uint8Array>);
-    /** @internal */
-    _start(): void;
-    /** @internal */
-    _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    _flush(): Promise<void>;
-    /** @internal */
-    _finalize(): Promise<void>;
-    /** @internal */
-    _close(): Promise<void>;
-    /** @internal */
-    _setMonotonicity(monotonicity: boolean): void;
 }
 /**
  * Options for {@link FilePathTarget}.
@@ -259,24 +141,8 @@ export type FilePathTargetOptions = StreamTargetOptions;
  * @public
  */
 export declare class FilePathTarget extends Target {
-    /** @internal */
-    _streamTarget: StreamTarget;
-    /** @internal */
-    _fileHandle: FileHandle | null;
     /** Creates a new {@link FilePathTarget} that writes to the file at the specified file path. */
     constructor(filePath: string, options?: FilePathTargetOptions);
-    /** @internal */
-    _start(): void;
-    /** @internal */
-    _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    _flush(): Promise<void>;
-    /** @internal */
-    _finalize(): Promise<void>;
-    /** @internal */
-    _close(): Promise<void | undefined>;
-    /** @internal */
-    _setMonotonicity(monotonicity: boolean): void;
 }
 /**
  * This target just discards all incoming data. It is useful for when you need an {@link Output} but extract data from
@@ -285,16 +151,6 @@ export declare class FilePathTarget extends Target {
  * @public
  */
 export declare class NullTarget extends Target {
-    /** @internal */
-    _start(): void;
-    /** @internal */
-    _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    _flush(): Promise<void>;
-    /** @internal */
-    _finalize(): Promise<void>;
-    /** @internal */
-    _close(): Promise<void>;
 }
 /**
  * A target that writes to a subrange (defined by an offset) of another, underlying target. Useful for writing a file
@@ -303,24 +159,6 @@ export declare class NullTarget extends Target {
  * @public
  */
 export declare class RangedTarget extends Target {
-    /** @internal */
-    _baseTarget: Target;
-    /** @internal */
-    _offset: number;
-    /** @internal */
-    constructor(baseTarget: Target, offset: number);
-    /** @internal */
-    _start(): void;
-    /** @internal */
-    _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    _flush(): Promise<void>;
-    /** @internal */
-    _finalize(): Promise<void>;
-    /** @internal */
-    _close(): Promise<void>;
-    /** @internal */
-    _setMonotonicity(monotonicity: boolean): void;
 }
 /**
  * A special target for writing multi-file media where each file is uniquely identified by a path.
@@ -352,5 +190,4 @@ export type TargetRequest = {
     /** The MIME type of the to-be-written file. */
     mimeType: string;
 };
-export {};
 //# sourceMappingURL=target.d.ts.map

@@ -5,8 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import type { FileHandle } from 'node:fs/promises';
-import { FilePath, MaybePromise, EventEmitter } from './misc';
+import { FilePath, MaybePromise, EventEmitter } from './misc.js';
 export type ReadResult = {
     bytes: Uint8Array;
     view: DataView;
@@ -35,30 +34,6 @@ export type SourceEvents = {
  * @public
  */
 export declare abstract class Source extends EventEmitter<SourceEvents> {
-    /** @internal */
-    abstract _getFileSize(): number | null | undefined;
-    /** @internal */
-    abstract _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    abstract _dispose(): void;
-    /** @internal */
-    _disposed: boolean;
-    /** @internal */
-    _refCount: number;
-    /**
-     * Used internally to mark if a source stems from an HLS reading operation. Used to suppress certain warnings.
-     * @internal
-     */
-    _usedForHls: boolean;
-    /**
-     * FinalizationRegistry for rogue refs to this source that didn't get freed. It lives on the Source itself so that
-     * in case the Source transitively points back to itself and forms a cycle (for example through a custom
-     * CustomSource callback) that we're not leaking memory.
-     * @internal
-     */
-    _refFinalizationRegistry: FinalizationRegistry<Source> | null;
-    /** @internal */
-    private _sizePromise;
     constructor();
     /**
      * Resolves with the total size of the file in bytes. This function is memoized, meaning only the first call
@@ -87,17 +62,11 @@ export declare abstract class Source extends EventEmitter<SourceEvents> {
      * @deprecated Use `source.on('read', ({ start, end }) => ...)` instead.
      */
     onread: ((start: number, end: number) => unknown) | null;
-    /** @internal */
-    _dispatchRead(start: number, end: number): void;
     /**
      * Creates a new `SourceRef` pointing to this source. You are expected to call `.free()` on said `SourceRef` when
      * you're done with it.
      */
     ref(): SourceRef<this>;
-    /** @internal */
-    _incrementRefCount(): void;
-    /** @internal */
-    _decrementRefCount(): void;
 }
 /**
  * A reference to a {@link Source}, used to manage a source's lifecycle. Creating a `SourceRef` via {@link Source.ref}
@@ -108,12 +77,6 @@ export declare abstract class Source extends EventEmitter<SourceEvents> {
  * @public
  */
 export declare class SourceRef<S extends Source = Source> implements Disposable {
-    /** @internal */
-    private _source;
-    /** @internal */
-    private _freed;
-    /** @internal */
-    constructor(source: S);
     /** The {@link Source} this ref references. Accessing this field throws an error after having freed the ref. */
     get source(): S;
     /** Whether or not this reference has been freed via {@link SourceRef.free}. */
@@ -153,8 +116,6 @@ export declare abstract class PathedSource extends Source {
     rootPath: FilePath, 
     /** The callback that is called for each requested file; must return a {@link Source} or {@link SourceRef}. */
     requestHandler: (request: SourceRequest) => MaybePromise<Source | SourceRef>);
-    /** @internal */
-    _resolveRequest(request: SourceRequest): MaybePromise<SourceRef>;
 }
 /**
  * A request for a {@link Source} at the given path.
@@ -176,16 +137,6 @@ export declare const sourceRequestsAreEqual: (a: SourceRequest, b: SourceRequest
  * @group Input sources
  */
 export declare class CustomPathedSource extends PathedSource {
-    /** @internal */
-    _root: SourceRef | null;
-    /** @internal */
-    _rootRequest: Promise<SourceRef> | null;
-    /** @internal */
-    _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    _getFileSize(): number | null | undefined;
-    /** @internal */
-    _dispose(): void;
 }
 /**
  * A source backed by an ArrayBuffer or ArrayBufferView, with the entire file held in memory.
@@ -193,23 +144,11 @@ export declare class CustomPathedSource extends PathedSource {
  * @public
  */
 export declare class BufferSource extends Source {
-    /** @internal */
-    _bytes: Uint8Array;
-    /** @internal */
-    _view: DataView;
-    /** @internal */
-    _onreadCalled: boolean;
     /**
      * Creates a new {@link BufferSource} backed by the specified `ArrayBuffer`, `SharedArrayBuffer`,
      * or `ArrayBufferView`.
      */
     constructor(buffer: AllowSharedBufferSource);
-    /** @internal */
-    _getFileSize(): number;
-    /** @internal */
-    _read(): ReadResult;
-    /** @internal */
-    _dispose(): void;
 }
 /**
  * Options for {@link BlobSource}.
@@ -234,27 +173,11 @@ export type BlobSourceOptions = {
  * @public
  */
 export declare class BlobSource extends Source {
-    /** @internal */
-    _blob: Blob;
-    /** @internal */
-    _options: BlobSourceOptions;
-    /** @internal */
-    _orchestrator: ReadOrchestrator;
     /**
      * Creates a new {@link BlobSource} backed by the specified
      * [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob).
      */
     constructor(blob: Blob, options?: BlobSourceOptions);
-    /** @internal */
-    _getFileSize(): number;
-    /** @internal */
-    _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    _readers: WeakMap<ReadWorker, ReadableStreamDefaultReader<Uint8Array<ArrayBufferLike>> | null>;
-    /** @internal */
-    private _runWorker;
-    /** @internal */
-    _dispose(): void;
 }
 /**
  * Options for {@link UrlSource}.
@@ -296,26 +219,6 @@ export type UrlSourceOptions = {
  * @public
  */
 export declare class UrlSource extends PathedSource {
-    /** @internal */
-    _url: string | URL | Request;
-    /** @internal */
-    _getRetryDelay: (previousAttempts: number, error: unknown, url: string | URL | Request) => number | null;
-    /** @internal */
-    _options: UrlSourceOptions;
-    /** @internal */
-    _requestInit: RequestInit;
-    /** @internal */
-    _offset: number;
-    /** @internal */
-    _length: number | null;
-    /** @internal */
-    _orchestrator: ReadOrchestrator;
-    /**
-     * Note that this value being true does NOT mean the file size can't change anymore; it just signals that we have at
-     * least checked if we know the file size or not.
-     * @internal
-     */
-    _fileSizeDetermined: boolean;
     /**
      * Creates a new {@link UrlSource} backed by the resource at the specified URL.
      *
@@ -323,14 +226,6 @@ export declare class UrlSource extends PathedSource {
      * ongoing requests, use {@link Input.dispose}.
      */
     constructor(url: string | URL | Request, options?: UrlSourceOptions);
-    /** @internal */
-    _getFileSize(): number | null | undefined;
-    /** @internal */
-    _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    private _runWorker;
-    /** @internal */
-    _dispose(): void;
 }
 /**
  * Options for {@link FilePathSource}.
@@ -350,18 +245,8 @@ export type FilePathSourceOptions = {
  * @public
  */
 export declare class FilePathSource extends PathedSource {
-    /** @internal */
-    _customSource: CustomSource;
-    /** @internal */
-    _fileHandle: FileHandle | null;
     /** Creates a new {@link FilePathSource} backed by the file at the specified file path. */
     constructor(filePath: string, options?: FilePathSourceOptions);
-    /** @internal */
-    _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    _getFileSize(): number | null | undefined;
-    /** @internal */
-    _dispose(): void;
 }
 /**
  * Options for defining a {@link CustomSource}.
@@ -407,20 +292,8 @@ export type CustomSourceOptions = {
  * @public
  */
 export declare class CustomSource extends Source {
-    /** @internal */
-    _options: CustomSourceOptions;
-    /** @internal */
-    _orchestrator: ReadOrchestrator;
     /** Creates a new {@link CustomSource} whose behavior is specified by `options`.  */
     constructor(options: CustomSourceOptions);
-    /** @internal */
-    _getFileSize(): number | null | undefined;
-    /** @internal */
-    _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    private _runWorker;
-    /** @internal */
-    _dispose(): void;
 }
 /**
  * An alias for {@link CustomSource}.
@@ -439,13 +312,6 @@ export declare const StreamSource: typeof CustomSource;
  * @public
  */
 export type StreamSourceOptions = CustomSourceOptions;
-type ReadableStreamSourcePendingSlice = {
-    start: number;
-    end: number;
-    bytes: Uint8Array;
-    resolve: (bytes: ReadResult | null) => void;
-    reject: (error: unknown) => void;
-};
 /**
  * Options for {@link ReadableStreamSource}.
  * @group Input sources
@@ -470,119 +336,8 @@ export type ReadableStreamSourceOptions = {
  * @public
  */
 export declare class ReadableStreamSource extends Source {
-    /** @internal */
-    _stream: ReadableStream<Uint8Array>;
-    /** @internal */
-    _reader: ReadableStreamDefaultReader<Uint8Array> | null;
-    /** @internal */
-    _cache: CacheEntry[];
-    /** @internal */
-    _maxCacheSize: number;
-    /** @internal */
-    _pendingSlices: ReadableStreamSourcePendingSlice[];
-    /** @internal */
-    _currentIndex: number;
-    /** @internal */
-    _targetIndex: number;
-    /** @internal */
-    _maxRequestedIndex: number;
-    /** @internal */
-    _endIndex: number | null;
-    /** @internal */
-    _pulling: boolean;
     /** Creates a new {@link ReadableStreamSource} backed by the specified `ReadableStream<Uint8Array>`. */
     constructor(stream: ReadableStream<Uint8Array>, options?: ReadableStreamSourceOptions);
-    /** @internal */
-    _getFileSize(): number | null;
-    /** @internal */
-    _read(start: number, end: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    _throwDueToCacheMiss(): void;
-    /** @internal */
-    _pull(): Promise<void>;
-    /** @internal */
-    _dispose(): void;
-}
-type PrefetchProfile = (start: number, end: number, workers: ReadWorker[]) => {
-    start: number;
-    end: number;
-};
-type PendingSlice = {
-    start: number;
-    bytes: Uint8Array;
-    holes: Hole[];
-    resolve: (bytes: Uint8Array | null) => void;
-    reject: (error: unknown) => void;
-};
-type Hole = {
-    start: number;
-    end: number;
-};
-type CacheEntry = {
-    start: number;
-    end: number;
-    bytes: Uint8Array;
-    view: DataView;
-    age: number;
-};
-type ReadWorker = {
-    startPos: number;
-    currentPos: number;
-    targetPos: number;
-    /** The target is considered _strict_ when it is an error for the worker to terminate before reaching the target. */
-    strictTarget: boolean;
-    running: boolean;
-    aborted: boolean;
-    pendingSlices: PendingSlice[];
-    age: number;
-};
-/**
- * Godclass for orchestrating complex, cached read operations. The reading model is as follows: Any reading task is
- * delegated to a *worker*, which is a sequential reader positioned somewhere along the file. All workers run in
- * parallel and can be stopped and resumed in their forward movement. When read requests come in, this orchestrator will
- * first try to satisfy the request with only the cached data. If this isn't possible, workers are spun up for all
- * missing parts (or existing workers are repurposed), and these workers will then fill the holes in the data as they
- * march along the file.
- */
-declare class ReadOrchestrator {
-    options: {
-        maxCacheSize: number;
-        runWorker: (worker: ReadWorker) => Promise<void>;
-        prefetchProfile: PrefetchProfile;
-        maxWorkerCount: number;
-    };
-    fileSize: number | null;
-    nextAge: number;
-    workers: ReadWorker[];
-    cache: CacheEntry[];
-    currentCacheSize: number;
-    disposed: boolean;
-    queuedReads: {
-        hole: Hole;
-        strictTarget: boolean;
-        pendingSlices: PendingSlice[];
-        age: number;
-    }[];
-    constructor(options: {
-        maxCacheSize: number;
-        runWorker: (worker: ReadWorker) => Promise<void>;
-        prefetchProfile: PrefetchProfile;
-        maxWorkerCount: number;
-    });
-    read(innerStart: number, innerEnd: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    checkHoleAgainstWorker(worker: ReadWorker, hole: Hole, pendingSlices: PendingSlice[]): boolean;
-    checkQueuedReadsAgainstWorker(worker: ReadWorker): void;
-    createWorker(startPos: number, targetPos: number, strictTarget: boolean): ReadWorker | null;
-    runWorker(worker: ReadWorker): void;
-    consolidateEverythingIntoOneWorker(worker: ReadWorker): void;
-    /** Called by a worker when it has read some data. */
-    supplyWorkerData(worker: ReadWorker, bytes: Uint8Array): void;
-    supplyFileSize(size: number): void;
-    signalWorkerStoppedRunning(worker: ReadWorker): void;
-    /** Called when a worker reaches the end of the underlying data and must be cleaned up. */
-    onWorkerFinished(worker: ReadWorker): void;
-    insertIntoCache(entry: CacheEntry): void;
-    dispose(): void;
 }
 /**
  * A dummy source from which no data can be read. Can be used in conjunction with input formats that get their data
@@ -601,23 +356,6 @@ export declare class NullSource extends Source {
  * @public
  */
 export declare class RangedSource extends Source {
-    /** @internal */
-    _baseSource: Source;
-    /** @internal */
-    _ref: SourceRef | null;
-    /** @internal */
-    _offset: number;
-    /** @internal */
-    _length: number | null;
-    /** @internal */
-    constructor(baseSource: Source, offset: number, length?: number);
-    /** @internal */
-    _getFileSize(): number | null | undefined;
-    /** @internal */
-    _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    _dispose(): void;
     ref(): SourceRef<this>;
 }
-export {};
 //# sourceMappingURL=source.d.ts.map

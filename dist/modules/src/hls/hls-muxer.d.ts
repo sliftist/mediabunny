@@ -5,13 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AsyncMutex } from '../misc';
-import { Muxer } from '../muxer';
-import { Output, OutputAudioTrack, OutputSubtitleTrack, OutputTrack, OutputVideoTrack } from '../output';
-import { HlsOutputFormat, HlsOutputFormatOptions, HlsOutputSegmentInfo, OutputFormat } from '../output-format';
-import { EncodedPacket } from '../packet';
-import { SubtitleCue, SubtitleMetadata } from '../subtitles';
-import { Target } from '../target';
+import { AsyncMutex } from '../misc.js';
+import { Muxer } from '../muxer.js';
+import { Output, OutputAudioTrack, OutputSubtitleTrack, OutputTrack, OutputVideoTrack } from '../output.js';
+import { HlsOutputFormat, HlsOutputFormatOptions, HlsOutputSegmentInfo, OutputFormat } from '../output-format.js';
+import { EncodedPacket } from '../packet.js';
+import { SubtitleCue, SubtitleMetadata } from '../subtitles.js';
+import { Target } from '../target.js';
 type HlsTrackData = {
     track: OutputTrack;
     packets: EncodedPacket[];

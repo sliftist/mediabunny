@@ -5,14 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AudioCodec } from '../codec';
-import { Demuxer } from '../demuxer';
-import { Input } from '../input';
-import { InputAudioTrackBacking } from '../input-track';
-import { PacketRetrievalOptions } from '../media-sink';
-import { MetadataTags } from '../metadata';
-import { EncodedPacket } from '../packet';
-import { Reader } from '../reader';
+import { AudioCodec } from '../codec.js';
+import { Demuxer } from '../demuxer.js';
+import { Input } from '../input.js';
+import { InputAudioTrackBacking } from '../input-track.js';
+import { PacketRetrievalOptions } from '../media-sink.js';
+import { MetadataTags } from '../metadata.js';
+import { EncodedPacket } from '../packet.js';
+import { Reader } from '../reader.js';
 export declare enum WaveFormat {
     PCM = 1,
     IEEE_FLOAT = 3,
@@ -51,7 +51,7 @@ declare class WaveAudioTrackBacking implements InputAudioTrackBacking {
     getType(): "audio";
     getId(): number;
     getNumber(): number;
-    getCodec(): "aac" | "opus" | "mp3" | "vorbis" | "flac" | "ac3" | "eac3" | "pcm-s16" | "pcm-s16be" | "pcm-s24" | "pcm-s24be" | "pcm-s32" | "pcm-s32be" | "pcm-f32" | "pcm-f32be" | "pcm-f64" | "pcm-f64be" | "pcm-u8" | "pcm-s8" | "ulaw" | "alaw" | null;
+    getCodec(): "vorbis" | "pcm-s16" | "pcm-s16be" | "pcm-s24" | "pcm-s24be" | "pcm-s32" | "pcm-s32be" | "pcm-f32" | "pcm-f32be" | "pcm-f64" | "pcm-f64be" | "pcm-u8" | "pcm-s8" | "ulaw" | "alaw" | "aac" | "opus" | "mp3" | "flac" | "ac3" | "eac3" | null;
     getInternalCodecId(): number;
     getDecoderConfig(): Promise<AudioDecoderConfig | null>;
     getNumberOfChannels(): number;

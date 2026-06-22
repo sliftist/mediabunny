@@ -5,16 +5,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { extractAv1CodecInfoFromPacket, extractAvcDecoderConfigurationRecord, extractHevcDecoderConfigurationRecord, extractVp9CodecInfoFromPacket, } from '../codec-data';
-import { extractAudioCodecString, extractVideoCodecString, OPUS_SAMPLE_RATE, } from '../codec';
-import { Demuxer } from '../demuxer';
-import { Logging } from '../logging';
-import { AttachedFile, DEFAULT_TRACK_DISPOSITION } from '../metadata';
-import { assert, binarySearchLessOrEqual, COLOR_PRIMARIES_MAP_INVERSE, findLastIndex, isIso639Dash2LanguageCode, last, MATRIX_COEFFICIENTS_MAP_INVERSE, normalizeRotation, roundIfAlmostInteger, TRANSFER_CHARACTERISTICS_MAP_INVERSE, UNDETERMINED_LANGUAGE, } from '../misc';
-import { EncodedPacket, PLACEHOLDER_DATA } from '../packet';
-import { assertDefinedSize, CODEC_STRING_MAP, EBMLId, LEVEL_0_AND_1_EBML_IDS, LEVEL_1_EBML_IDS, MAX_HEADER_SIZE, MIN_HEADER_SIZE, readAsciiString, readUnicodeString, readElementHeader, readElementId, readFloat, readUnsignedInt, readVarInt, resync, searchForNextElementId, readUnsignedBigInt, } from './ebml';
-import { buildMatroskaMimeType } from './matroska-misc';
-import { FileSlice, readBytes, readI16Be, readU8 } from '../reader';
+import { extractAv1CodecInfoFromPacket, extractAvcDecoderConfigurationRecord, extractHevcDecoderConfigurationRecord, extractVp9CodecInfoFromPacket, } from '../codec-data.js';
+import { extractAudioCodecString, extractVideoCodecString, OPUS_SAMPLE_RATE, } from '../codec.js';
+import { Demuxer } from '../demuxer.js';
+import { Logging } from '../logging.js';
+import { AttachedFile, DEFAULT_TRACK_DISPOSITION } from '../metadata.js';
+import { assert, binarySearchLessOrEqual, COLOR_PRIMARIES_MAP_INVERSE, findLastIndex, isIso639Dash2LanguageCode, last, MATRIX_COEFFICIENTS_MAP_INVERSE, normalizeRotation, roundIfAlmostInteger, TRANSFER_CHARACTERISTICS_MAP_INVERSE, UNDETERMINED_LANGUAGE, } from '../misc.js';
+import { EncodedPacket, PLACEHOLDER_DATA } from '../packet.js';
+import { assertDefinedSize, CODEC_STRING_MAP, EBMLId, LEVEL_0_AND_1_EBML_IDS, LEVEL_1_EBML_IDS, MAX_HEADER_SIZE, MIN_HEADER_SIZE, readAsciiString, readUnicodeString, readElementHeader, readElementId, readFloat, readUnsignedInt, readVarInt, resync, searchForNextElementId, readUnsignedBigInt, } from './ebml.js';
+import { buildMatroskaMimeType } from './matroska-misc.js';
+import { FileSlice, readBytes, readI16Be, readU8 } from '../reader.js';
 var BlockLacing;
 (function (BlockLacing) {
     BlockLacing[BlockLacing["None"] = 0] = "None";

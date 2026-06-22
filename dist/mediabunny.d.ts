@@ -1,86 +1,12 @@
 /// <reference types="dom-mediacapture-transform" />
 /// <reference types="dom-webcodecs" />
 
-import type { FileHandle } from 'node:fs/promises';
-
-declare type AacCodecInfo = {
-    isMpeg2: boolean;
-    objectType: number | null;
-};
-
 /**
  * ADTS input format singleton.
  * @group Input formats
  * @public
  */
 export declare const ADTS: AdtsInputFormat;
-
-declare class AdtsAudioTrackBacking implements InputAudioTrackBacking {
-    demuxer: AdtsDemuxer;
-    constructor(demuxer: AdtsDemuxer);
-    getType(): "audio";
-    getId(): number;
-    getNumber(): number;
-    getTimeResolution(): number;
-    isRelativeToUnixEpoch(): boolean;
-    getUnixTimeForTimestamp(): null;
-    getPairingMask(): bigint;
-    getBitrate(): null;
-    getAverageBitrate(): null;
-    getDurationFromMetadata(): Promise<null>;
-    getLiveRefreshInterval(): Promise<null>;
-    getName(): null;
-    getLanguageCode(): string;
-    getCodec(): AudioCodec;
-    getInternalCodecId(): number;
-    getNumberOfChannels(): number;
-    getSampleRate(): number;
-    getDisposition(): {
-        default: boolean;
-        primary: boolean;
-        forced: boolean;
-        original: boolean;
-        commentary: boolean;
-        hearingImpaired: boolean;
-        visuallyImpaired: boolean;
-    };
-    getDecoderConfig(): Promise<AudioDecoderConfig>;
-    getPacketAtIndex(sampleIndex: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getFirstPacket(options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getNextPacket(packet: EncodedPacket, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getPacket(timestamp: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getKeyPacket(timestamp: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getNextKeyPacket(packet: EncodedPacket, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-}
-
-declare class AdtsDemuxer extends Demuxer {
-    reader: Reader;
-    metadataPromise: Promise<void> | null;
-    firstFrameHeader: AdtsFrameHeader | null;
-    loadedSamples: Sample_2[];
-    metadataTags: MetadataTags | null;
-    trackBackings: AdtsAudioTrackBacking[];
-    readingMutex: AsyncMutex;
-    lastSampleLoaded: boolean;
-    lastLoadedPos: number;
-    nextTimestampInSamples: number;
-    constructor(input: Input);
-    readMetadata(): Promise<void>;
-    advanceReader(): Promise<void>;
-    getMimeType(): Promise<string>;
-    getTrackBackings(): Promise<AdtsAudioTrackBacking[]>;
-    getMetadataTags(): Promise<MetadataTags>;
-}
-
-declare type AdtsFrameHeader = {
-    objectType: number;
-    samplingFrequencyIndex: number;
-    channelConfiguration: number;
-    frameLength: number;
-    numberOfAacFrames: number;
-    crcCheck: number | null;
-    startPos: number;
-};
 
 /**
  * ADTS file format.
@@ -91,27 +17,8 @@ declare type AdtsFrameHeader = {
  * @public
  */
 export declare class AdtsInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): AdtsDemuxer;
     get name(): string;
     get mimeType(): string;
-}
-
-declare class AdtsMuxer extends Muxer {
-    private format;
-    private writer;
-    private header;
-    private headerBitstream;
-    private inputIsAdts;
-    constructor(output: Output, format: AdtsOutputFormat);
-    start(): Promise<void>;
-    getMimeType(): Promise<string>;
-    addEncodedVideoPacket(): Promise<void>;
-    addEncodedAudioPacket(track: OutputAudioTrack, packet: EncodedPacket, meta?: EncodedAudioChunkMetadata): Promise<void>;
-    addSubtitleCue(): Promise<void>;
-    finalize(): Promise<void>;
 }
 
 /**
@@ -120,14 +27,8 @@ declare class AdtsMuxer extends Muxer {
  * @public
  */
 export declare class AdtsOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: AdtsOutputFormatOptions;
     /** Creates a new {@link AdtsOutputFormat} configured with the specified `options`. */
     constructor(options?: AdtsOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): AdtsMuxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -185,27 +86,7 @@ export declare type AnyIterable<T> = Iterable<T> | AsyncIterable<T>;
  * @public
  */
 export declare class AppendOnlyStreamTarget extends Target {
-    /** @internal */
-    _writable: WritableStream<Uint8Array>;
-    /** @internal */
-    _streamTarget: StreamTarget;
-    /** @internal */
-    _writer: WritableStreamDefaultWriter<Uint8Array> | null;
-    /** @internal */
-    _nextWritePos: number;
     constructor(writable: WritableStream<Uint8Array>);
-    /** @internal */
-    _start(): void;
-    /** @internal */
-    _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    _flush(): Promise<void>;
-    /** @internal */
-    _finalize(): Promise<void>;
-    /** @internal */
-    _close(): Promise<void>;
-    /** @internal */
-    _setMonotonicity(monotonicity: boolean): void;
 }
 
 /**
@@ -216,12 +97,6 @@ export declare class AppendOnlyStreamTarget extends Target {
  * @public
  */
 export declare const asc: (value: number | null | undefined) => number;
-
-declare class AsyncMutex {
-    currentPromise: Promise<void>;
-    pending: number;
-    acquire(): Promise<() => void>;
-}
 
 /**
  * A file attached to a media file.
@@ -284,12 +159,8 @@ export declare const AUDIO_CODECS: readonly ["aac", "opus", "mp3", "vorbis", "fl
  * @public
  */
 export declare class AudioBufferSink {
-    /** @internal */
-    _audioSampleSink: AudioSampleSink;
     /** Creates a new {@link AudioBufferSink} for the given {@link InputAudioTrack}. */
     constructor(audioTrack: InputAudioTrack);
-    /** @internal */
-    _audioSampleToWrappedArrayBuffer(sample: AudioSample): WrappedAudioBuffer;
     /**
      * Retrieves the audio buffer corresponding to the given timestamp, in seconds. More specifically, returns
      * the last audio buffer (in presentation order) with a start timestamp less than or equal to the given timestamp.
@@ -327,10 +198,6 @@ export declare class AudioBufferSink {
  * @public
  */
 export declare class AudioBufferSource extends AudioSource {
-    /** @internal */
-    private _encoder;
-    /** @internal */
-    private _accumulatedTime;
     /**
      * Creates a new {@link AudioBufferSource} whose `AudioBuffer` instances are encoded according to the specified
      * {@link AudioEncodingConfig}.
@@ -345,8 +212,6 @@ export declare class AudioBufferSource extends AudioSource {
      * to respect writer and encoder backpressure.
      */
     add(audioBuffer: AudioBuffer): Promise<void>;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
 
 /**
@@ -355,21 +220,6 @@ export declare class AudioBufferSource extends AudioSource {
  * @public
  */
 export declare type AudioCodec = typeof AUDIO_CODECS[number];
-
-declare class AudioDecoderWrapper extends DecoderWrapper<AudioSample> {
-    decoder: AudioDecoder | null;
-    customDecoder: CustomAudioDecoder | null;
-    customDecoderCallSerializer: CallSerializer;
-    customDecoderQueueSize: number;
-    currentTimestamp: number | null;
-    expectedFirstTimestamp: number | null;
-    timestampOffset: number;
-    constructor(onSample: (sample: AudioSample) => unknown, onError: (error: Error) => unknown, codec: AudioCodec, decoderConfig: AudioDecoderConfig);
-    getDecodeQueueSize(): number;
-    decode(packet: EncodedPacket): void;
-    flush(): Promise<void>;
-    close(): void;
-}
 
 /**
  * Additional options that control audio encoding.
@@ -421,10 +271,6 @@ export declare type AudioEncodingConfig = {
  * @public
  */
 export declare class AudioSample implements Disposable {
-    /** @internal */
-    _data: AudioData | Uint8Array | AudioSampleResource;
-    /** @internal */
-    _closed: boolean;
     /**
      * The audio sample format.
      * [See sample formats](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/format)
@@ -477,16 +323,12 @@ export declare class AudioSample implements Disposable {
      * method *must* be closed separately from this audio sample.
      */
     toAudioData(): AudioData;
-    /** @internal */
-    _createAudioDataFromData(): AudioData;
     /** Convert this audio sample to an AudioBuffer for use with the Web Audio API. */
     toAudioBuffer(): AudioBuffer;
     /** Sets the presentation timestamp of this audio sample, in seconds. */
     setTimestamp(newTimestamp: number): void;
     /** Calls `.close()`. */
     [Symbol.dispose](): void;
-    /** @internal */
-    static _fromAudioBuffer(audioBuffer: AudioBuffer, timestamp: number): Generator<AudioSample, void, unknown>;
     /**
      * Creates AudioSamples from an AudioBuffer, starting at the given timestamp in seconds. Typically creates exactly
      * one sample, but may create multiple if the AudioBuffer is exceedingly large.
@@ -545,8 +387,6 @@ export declare type AudioSampleInit = {
  * @public
  */
 export declare abstract class AudioSampleResource {
-    /** @internal */
-    _referenceCount: number;
     /**
      * Returns the audio sample format.
      * [See sample formats](https://developer.mozilla.org/en-US/docs/Web/API/AudioData/format)
@@ -578,14 +418,8 @@ export declare abstract class AudioSampleResource {
  * @public
  */
 export declare class AudioSampleSink extends BaseMediaSampleSink<AudioSample> {
-    /** @internal */
-    _track: InputAudioTrack;
     /** Creates a new {@link AudioSampleSink} for the given {@link InputAudioTrack}. */
     constructor(audioTrack: InputAudioTrack);
-    /** @internal */
-    _createDecoder(onSample: (sample: AudioSample) => unknown, onError: (error: Error) => unknown): Promise<AudioDecoderWrapper | PcmAudioDecoderWrapper>;
-    /** @internal */
-    _createPacketSink(): EncodedPacketSink;
     /**
      * Retrieves the audio sample corresponding to the given timestamp, in seconds. More specifically, returns
      * the last audio sample (in presentation order) with a start timestamp less than or equal to the given timestamp.
@@ -626,8 +460,6 @@ export declare class AudioSampleSink extends BaseMediaSampleSink<AudioSample> {
  * @public
  */
 export declare class AudioSampleSource extends AudioSource {
-    /** @internal */
-    private _encoder;
     /**
      * Creates a new {@link AudioSampleSource} whose samples are encoded according to the specified
      * {@link AudioEncodingConfig}.
@@ -640,8 +472,6 @@ export declare class AudioSampleSource extends AudioSource {
      * to respect writer and encoder backpressure.
      */
     add(audioSample: AudioSample): Promise<void>;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
 
 /**
@@ -650,10 +480,6 @@ export declare class AudioSampleSource extends AudioSource {
  * @public
  */
 export declare abstract class AudioSource extends MediaSource_2 {
-    /** @internal */
-    _connectedTrack: OutputAudioTrack | null;
-    /** @internal */
-    readonly _codec: AudioCodec;
     /** Internal constructor. */
     constructor(codec: AudioCodec);
 }
@@ -689,60 +515,12 @@ export declare type AudioTransformOptions = {
     process?: (sample: AudioSample) => MaybePromise<AudioSample | AudioSample[] | null>;
 };
 
-declare type Av1CodecInfo = {
-    profile: number;
-    level: number;
-    tier: number;
-    bitDepth: number;
-    monochrome: number;
-    chromaSubsamplingX: number;
-    chromaSubsamplingY: number;
-    chromaSamplePosition: number;
-};
-
-declare type AvcDecoderConfigurationRecord = {
-    configurationVersion: number;
-    avcProfileIndication: number;
-    profileCompatibility: number;
-    avcLevelIndication: number;
-    lengthSizeMinusOne: number;
-    sequenceParameterSets: Uint8Array[];
-    pictureParameterSets: Uint8Array[];
-    chromaFormat: number | null;
-    bitDepthLumaMinus8: number | null;
-    bitDepthChromaMinus8: number | null;
-    sequenceParameterSetExt: Uint8Array[] | null;
-};
-
 /**
  * AVI input format singleton.
  * @group Input formats
  * @public
  */
 export declare const AVI: AviInputFormat;
-
-declare class AviDemuxer extends Demuxer {
-    reader: Reader;
-    metadataPromise: Promise<void> | null;
-    streams: AviStream[];
-    trackBackings: InputTrackBacking[];
-    metadataTags: MetadataTags;
-    constructor(input: Input);
-    private slice;
-    readMetadata(): Promise<void>;
-    private parseHdrl;
-    private parseStrl;
-    private parseIdx1;
-    private scanMovi;
-    private assignTimestamps;
-    private buildTrackBackings;
-    videoCodecFor(stream: AviStream): VideoCodec | null;
-    audioCodecFor(stream: AviStream): AudioCodec | null;
-    readSampleData(sample: AviSample, options: PacketRetrievalOptions): Promise<Uint8Array>;
-    getMimeType(): Promise<string>;
-    getTrackBackings(): Promise<InputTrackBacking[]>;
-    getMetadataTags(): Promise<MetadataTags>;
-}
 
 /**
  * AVI (Audio Video Interleave) file format, based on RIFF.
@@ -753,44 +531,9 @@ declare class AviDemuxer extends Demuxer {
  * @public
  */
 export declare class AviInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): AviDemuxer;
     get name(): string;
     get mimeType(): string;
 }
-
-declare type AviSample = {
-    offset: number;
-    size: number;
-    key: boolean;
-    timestamp: number;
-    duration: number;
-    sequenceNumber: number;
-};
-
-declare type AviStream = {
-    index: number;
-    type: 'video' | 'audio' | 'other';
-    fccHandler: string;
-    scale: number;
-    rate: number;
-    start: number;
-    length: number;
-    sampleSize: number;
-    width: number;
-    height: number;
-    compression: string;
-    codecPrivate: Uint8Array | null;
-    formatTag: number;
-    channels: number;
-    sampleRate: number;
-    avgBytesPerSec: number;
-    blockAlign: number;
-    samples: AviSample[];
-    backing: InputTrackBacking | null;
-};
 
 /**
  * Base class for decoded media sample sinks.
@@ -798,16 +541,6 @@ declare type AviStream = {
  * @public
  */
 export declare abstract class BaseMediaSampleSink<MediaSample extends VideoSample | AudioSample> {
-    /** @internal */
-    abstract _track: InputTrack;
-    /** @internal */
-    abstract _createDecoder(onSample: (sample: MediaSample) => unknown, onError: (error: Error) => unknown): Promise<DecoderWrapper<MediaSample>>;
-    /** @internal */
-    abstract _createPacketSink(): EncodedPacketSink;
-    /** @internal */
-    protected mediaSamplesInRange(startTimestamp: number | undefined, endTimestamp: number | undefined, options: PacketRetrievalOptions): AsyncGenerator<MediaSample, void, unknown>;
-    /** @internal */
-    protected mediaSamplesAtTimestamps(timestamps: AnyIterable<number>, options: PacketRetrievalOptions): AsyncGenerator<MediaSample | null, void, unknown>;
 }
 
 /**
@@ -863,27 +596,11 @@ export declare type BaseTrackMetadata = {
  * @public
  */
 export declare class BlobSource extends Source {
-    /** @internal */
-    _blob: Blob;
-    /** @internal */
-    _options: BlobSourceOptions;
-    /** @internal */
-    _orchestrator: ReadOrchestrator;
     /**
      * Creates a new {@link BlobSource} backed by the specified
      * [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob).
      */
     constructor(blob: Blob, options?: BlobSourceOptions);
-    /** @internal */
-    _getFileSize(): number;
-    /** @internal */
-    _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    _readers: WeakMap<ReadWorker, ReadableStreamDefaultReader<Uint8Array<ArrayBufferLike>> | null>;
-    /** @internal */
-    private _runWorker;
-    /** @internal */
-    _dispose(): void;
 }
 
 /**
@@ -902,36 +619,17 @@ export declare type BlobSourceOptions = {
     useStreamReader?: boolean;
 };
 
-declare enum BlockLacing {
-    None = 0,
-    Xiph = 1,
-    FixedSize = 2,
-    Ebml = 3
-}
-
 /**
  * A source backed by an ArrayBuffer or ArrayBufferView, with the entire file held in memory.
  * @group Input sources
  * @public
  */
 declare class BufferSource_2 extends Source {
-    /** @internal */
-    _bytes: Uint8Array;
-    /** @internal */
-    _view: DataView;
-    /** @internal */
-    _onreadCalled: boolean;
     /**
      * Creates a new {@link BufferSource} backed by the specified `ArrayBuffer`, `SharedArrayBuffer`,
      * or `ArrayBufferView`.
      */
     constructor(buffer: AllowSharedBufferSource);
-    /** @internal */
-    _getFileSize(): number;
-    /** @internal */
-    _read(): ReadResult;
-    /** @internal */
-    _dispose(): void;
 }
 export { BufferSource_2 as BufferSource }
 
@@ -944,32 +642,8 @@ export { BufferSource_2 as BufferSource }
 export declare class BufferTarget extends Target {
     /** Stores the final output buffer. Until the output is finalized, this will be `null`. */
     buffer: ArrayBuffer | null;
-    /** @internal */
-    _buffer: ArrayBuffer;
-    /** @internal */
-    _bytes: Uint8Array;
-    /** @internal */
-    _maxPos: number;
-    /** @internal */
-    _supportsResize: boolean;
-    /** @internal */
-    _options: BufferTargetOptions;
     /** Creates a new {@link BufferTarget}. The buffer holding the data will be created and managed internally. */
     constructor(options?: BufferTargetOptions);
-    /** @internal */
-    _ensureSize(size: number): void;
-    /** @internal */
-    _start(): void;
-    /** @internal */
-    _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    _flush(): Promise<void>;
-    /** @internal */
-    _finalize(): Promise<void>;
-    /** @internal */
-    _close(): Promise<void>;
-    /** @internal */
-    _getSlice(start: number, end: number): Uint8Array<ArrayBuffer>;
 }
 
 /**
@@ -987,19 +661,6 @@ export declare type BufferTargetOptions = {
      */
     onFinalize?: (buffer: ArrayBuffer) => MaybePromise<unknown>;
 };
-
-declare type CacheEntry = {
-    start: number;
-    end: number;
-    bytes: Uint8Array;
-    view: DataView;
-    age: number;
-};
-
-declare class CallSerializer {
-    currentPromise: Promise<void>;
-    call(fn: () => Promise<void> | void): Promise<void>;
-}
 
 /**
  * Checks if the browser is able to decode the given codec.
@@ -1069,41 +730,8 @@ export declare const canEncodeVideo: (codec: VideoCodec, options?: {
  * @public
  */
 export declare class CanvasSink {
-    /** @internal */
-    _videoTrack: InputVideoTrack;
-    /** @internal */
-    _alpha: boolean;
-    /** @internal */
-    _width: number;
-    /** @internal */
-    _height: number;
-    /** @internal */
-    _options: CanvasSinkOptions;
-    /** @internal */
-    _fit: 'fill' | 'contain' | 'cover';
-    /** @internal */
-    _rotation: Rotation;
-    /** @internal */
-    _crop?: {
-        left: number;
-        top: number;
-        width: number;
-        height: number;
-    };
-    /** @internal */
-    _initPromise: Promise<void> | null;
-    /** @internal */
-    _videoSampleSink: VideoSampleSink;
-    /** @internal */
-    _canvasPool: (HTMLCanvasElement | OffscreenCanvas | null)[];
-    /** @internal */
-    _nextCanvasIndex: number;
     /** Creates a new {@link CanvasSink} for the given {@link InputVideoTrack}. */
     constructor(videoTrack: InputVideoTrack, options?: CanvasSinkOptions);
-    /** @internal */
-    _ensureInit(): Promise<void>;
-    /** @internal */
-    _videoSampleToWrappedCanvas(sample: VideoSample): WrappedCanvas;
     /**
      * Retrieves a canvas with the video frame corresponding to the given timestamp, in seconds. More specifically,
      * returns the last video frame (in presentation order) with a start timestamp less than or equal to the given
@@ -1196,10 +824,6 @@ export declare type CanvasSinkOptions = {
  * @public
  */
 export declare class CanvasSource extends VideoSource {
-    /** @internal */
-    private _encoder;
-    /** @internal */
-    private _canvas;
     /**
      * Creates a new {@link CanvasSource} from a canvas element or `OffscreenCanvas` whose samples are encoded
      * according to the specified {@link VideoEncodingConfig}.
@@ -1215,60 +839,7 @@ export declare class CanvasSource extends VideoSource {
      * to respect writer and encoder backpressure.
      */
     add(timestamp: number, duration?: number, encodeOptions?: VideoEncoderEncodeOptions): Promise<void>;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
-
-declare type Chunk = {
-    /** The lowest presentation timestamp in this chunk */
-    startTimestamp: number;
-    samples: Sample[];
-    offset: number | null;
-    moofOffset: number | null;
-};
-
-declare type Chunk_2 = {
-    start: number;
-    written: ChunkSection[];
-    data: Uint8Array<ArrayBuffer>;
-    shouldFlush: boolean;
-};
-
-declare type ChunkSection = {
-    start: number;
-    end: number;
-};
-
-declare type Cluster = {
-    segment: Segment_2;
-    elementStartPos: number;
-    elementEndPos: number;
-    dataStartPos: number;
-    timestamp: number;
-    trackData: Map<number, ClusterTrackData>;
-};
-
-declare type ClusterBlock = {
-    timestamp: number;
-    duration: number;
-    isKeyFrame: boolean;
-    data: Uint8Array;
-    lacing: BlockLacing;
-    decoded: boolean;
-    mainAdditional: Uint8Array | null;
-};
-
-declare type ClusterTrackData = {
-    track: InternalTrack_3;
-    startTimestamp: number;
-    endTimestamp: number;
-    firstKeyFrameTimestamp: number | null;
-    blocks: ClusterBlock[];
-    presentationTimestamps: {
-        timestamp: number;
-        blockIndex: number;
-    }[];
-};
 
 /**
  * Creates a single Common Media Application Format (CMAF) segment. An init segment will be written to the
@@ -1279,8 +850,6 @@ declare type ClusterTrackData = {
 export declare class CmafOutputFormat extends IsobmffOutputFormat {
     /** Creates a new {@link CmafOutputFormat} configured with the specified `options`. */
     constructor(options?: CmafOutputFormatOptions);
-    /** @internal */
-    get _name(): string;
     get fileExtension(): string;
     get mimeType(): string;
     getSupportedCodecs(): MediaCodec[];
@@ -1299,29 +868,6 @@ export declare type CmafOutputFormatOptions = Omit<IsobmffOutputFormatOptions, '
     minimumFragmentDuration?: number;
 };
 
-/** Utility class that merges together color and alpha information using simple WebGL 2 shaders. */
-declare class ColorAlphaMerger {
-    static forceCpu: boolean;
-    canvas: OffscreenCanvas | HTMLCanvasElement | null;
-    private gl;
-    private program;
-    private vao;
-    private colorTexture;
-    private alphaTexture;
-    private worker;
-    private pendingRequests;
-    private nextRequestId;
-    constructor();
-    update(color: VideoFrame, alpha: VideoFrame): Promise<VideoFrame>;
-    private createProgram;
-    private createShader;
-    private createVAO;
-    private createTexture;
-    private updateGpu;
-    private updateCpu;
-    close(): void;
-}
-
 /**
  * Utility class for running async functions in parallel up to a certain level of parallelism. Can be used to apply
  * backpressure only if the concurrency level would be exceeded.
@@ -1330,10 +876,6 @@ declare class ColorAlphaMerger {
  * @public
  */
 export declare class ConcurrentRunner {
-    /** @internal */
-    _queue: Promise<unknown>[];
-    /** @internal */
-    _errored: boolean;
     /**
      * The maximum number of in-flight promises. You can also think of it as the "high water mark".
      * You can set this value to dynamically change the level of parallelism.
@@ -1356,19 +898,6 @@ export declare class ConcurrentRunner {
     flush(): Promise<void>;
 }
 
-declare enum ContentCompAlgo {
-    Zlib = 0,
-    Bzlib = 1,
-    lzo1x = 2,
-    HeaderStripping = 3
-}
-
-declare enum ContentEncodingScope {
-    Block = 1,
-    Private = 2,
-    Next = 4
-}
-
 /**
  * Represents a media file conversion process, used to convert one media file into another. In addition to conversion,
  * this class can be used to resize and rotate video, resample audio, drop tracks, or trim to a specific time range.
@@ -1380,38 +909,6 @@ export declare class Conversion {
     readonly input: Input;
     /** The output file. */
     readonly output: Output;
-    /** @internal */
-    _options: ConversionOptions;
-    /** @internal */
-    _startTimestamp: number;
-    /** @internal */
-    _endTimestamp: number;
-    /** @internal */
-    _addedCounts: Record<TrackType, number>;
-    /** @internal */
-    _totalTrackCount: number;
-    /** @internal */
-    _nextOutputTrackId: number;
-    /** @internal */
-    _outputTrackIds: number[];
-    /** @internal */
-    _outputOwnTrackGroups: (OutputTrackGroup | null)[];
-    /** @internal */
-    _trackPromises: Promise<void>[];
-    /** @internal */
-    _started: Promise<void>;
-    /** @internal */
-    _start: () => void;
-    /** @internal */
-    _executed: boolean;
-    /** @internal */
-    _synchronizer: TrackSynchronizer;
-    /** @internal */
-    _totalDuration: number | null;
-    /** @internal */
-    _maxTimestamps: Map<number, number>;
-    /** @internal */
-    _canceled: boolean;
     /**
      * A callback that is fired whenever the conversion progresses. Gets passed as first argument a number between
      * 0 and 1, indicating the completion of the conversion. Note that a progress of 1 doesn't necessarily mean the
@@ -1422,10 +919,6 @@ export declare class Conversion {
      * In order for progress to be computed, this property must be set before `execute` is called.
      */
     onProgress?: (progress: number, processedTime: number) => unknown;
-    /** @internal */
-    _computeProgress: boolean;
-    /** @internal */
-    _lastProgress: number;
     /**
      * Whether this conversion, as it has been configured, is valid and can be executed. If this field is `false`, check
      * the `discardedTracks` field for reasons.
@@ -1445,10 +938,6 @@ export declare class Conversion {
     static init(options: ConversionOptions): Promise<Conversion>;
     /** Creates a new Conversion instance (duh). */
     private constructor();
-    /** @internal */
-    _init(): Promise<void>;
-    /** @internal */
-    _getInvalidityExplanation(): string[];
     /**
      * Executes the conversion process. Resolves once conversion is complete.
      *
@@ -1460,14 +949,6 @@ export declare class Conversion {
      * Does nothing if the conversion is already complete.
      */
     cancel(): Promise<void>;
-    /** @internal */
-    _processVideoTrack(track: InputVideoTrack, trackOptions: ConversionVideoOptions, outputTrackId: number): Promise<void>;
-    /** @internal */
-    _processAudioTrack(track: InputAudioTrack, trackOptions: ConversionAudioOptions, outputTrackId: number): Promise<void>;
-    /** @internal */
-    _registerAudioSample(sample: AudioSample, source: AudioSampleSource, outputTrackId: number, getLastSampleTimestamp: () => number | null): Promise<void>;
-    /** @internal */
-    _reportProgress(trackId: number, endTimestamp: number): void;
 }
 
 /**
@@ -1730,12 +1211,6 @@ export declare type CropRectangle = {
     height: number;
 };
 
-declare type CuePoint = {
-    time: number;
-    trackId: number;
-    clusterPosition: number;
-};
-
 /**
  * Base class for custom audio decoders. To add your own custom audio decoder, extend this class, implement the
  * abstract methods and static `supports` method, and register the decoder using {@link registerDecoder}.
@@ -1794,16 +1269,6 @@ export declare abstract class CustomAudioEncoder {
  * @group Input sources
  */
 export declare class CustomPathedSource extends PathedSource {
-    /** @internal */
-    _root: SourceRef | null;
-    /** @internal */
-    _rootRequest: Promise<SourceRef> | null;
-    /** @internal */
-    _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    _getFileSize(): number | null | undefined;
-    /** @internal */
-    _dispose(): void;
 }
 
 /**
@@ -1813,20 +1278,8 @@ export declare class CustomPathedSource extends PathedSource {
  * @public
  */
 export declare class CustomSource extends Source {
-    /** @internal */
-    _options: CustomSourceOptions;
-    /** @internal */
-    _orchestrator: ReadOrchestrator;
     /** Creates a new {@link CustomSource} whose behavior is specified by `options`.  */
     constructor(options: CustomSourceOptions);
-    /** @internal */
-    _getFileSize(): number | null | undefined;
-    /** @internal */
-    _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    private _runWorker;
-    /** @internal */
-    _dispose(): void;
 }
 
 /**
@@ -1917,28 +1370,6 @@ export declare abstract class CustomVideoEncoder {
     abstract close(): MaybePromise<void>;
 }
 
-declare abstract class DecoderWrapper<MediaSample extends VideoSample | AudioSample> {
-    onSample: (sample: MediaSample) => unknown;
-    onError: (error: Error) => unknown;
-    constructor(onSample: (sample: MediaSample) => unknown, onError: (error: Error) => unknown);
-    abstract getDecodeQueueSize(): number;
-    abstract decode(packet: EncodedPacket): void;
-    abstract flush(): Promise<void>;
-    abstract close(): void;
-}
-
-declare type DecodingInstruction = {
-    order: number;
-    scope: ContentEncodingScope;
-    data: {
-        type: 'decompress';
-        algorithm: ContentCompAlgo | null;
-        settings: Uint8Array | null;
-    } | {
-        type: 'decrypt';
-    } | null;
-};
-
 /**
  * Recursively makes all properties of T readonly.
  * @group Miscellaneous
@@ -1947,15 +1378,6 @@ declare type DecodingInstruction = {
 export declare type DeepReadonly<T> = T extends object ? {
     readonly [K in keyof T]: DeepReadonly<T[K]>;
 } : T;
-
-declare abstract class Demuxer {
-    input: Input;
-    constructor(input: Input);
-    abstract getTrackBackings(): Promise<InputTrackBacking[]>;
-    abstract getMimeType(): Promise<string>;
-    abstract getMetadataTags(): Promise<MetadataTags>;
-    dispose(): void;
-}
 
 /**
  * Helper function for use in {@link InputTrackQuery.sortBy}, used to describe sorting tracks by a numeric property in
@@ -2007,44 +1429,6 @@ export declare type DurationMetadataRequestOptions = {
      * See also {@link PacketRetrievalOptions.skipLiveWait}.
      */
     skipLiveWait?: boolean;
-};
-
-declare type ElementaryStream = {
-    demuxer: MpegTsDemuxer;
-    pid: number;
-    streamType: number;
-    initialized: boolean;
-    firstSection: Section | null;
-    /**
-     * Some muxers suck ass and don't correctly label key frames, meaning we'll need to use our skill to
-     * compensate for another programmer's skill issue.
-     */
-    canBeTrustedWithKeyPackets: boolean;
-    info: {
-        type: 'video';
-        codec: VideoCodec;
-        decoderConfig: VideoDecoderConfig | null;
-        avcCodecInfo: AvcDecoderConfigurationRecord | null;
-        hevcCodecInfo: HevcDecoderConfigurationRecord | null;
-        colorSpace: VideoColorSpaceInit;
-        width: number;
-        height: number;
-        squarePixelWidth: number;
-        squarePixelHeight: number;
-        reorderSize: number;
-    } | {
-        type: 'audio';
-        codec: AudioCodec;
-        decoderConfig: AudioDecoderConfig | null;
-        aacCodecInfo: AacCodecInfo | null;
-        numberOfChannels: number;
-        sampleRate: number;
-    };
-    /**
-     * Reference PES packets, spread throughout the file, to be used to speed up repeated random access. Sorted by both
-     * byte offset and PTS.
-     */
-    referencePesPackets: TimestampedPesPacketHeader[];
 };
 
 /**
@@ -2174,14 +1558,6 @@ export declare class EncodedPacket {
     }): EncodedPacket;
 }
 
-declare type EncodedPacketMetadata = {
-    packet: Packet_2;
-    timestampInSamples: number;
-    durationInSamples: number;
-    vorbisLastBlockSize: number | null;
-    vorbisBlockSize: number | null;
-};
-
 /**
  * Holds additional data accompanying an {@link EncodedPacket}.
  * @group Packets
@@ -2206,8 +1582,6 @@ export declare type EncodedPacketSideData = {
  * @public
  */
 export declare class EncodedPacketSink {
-    /** @internal */
-    _track: InputTrack;
     /** Creates a new {@link EncodedPacketSink} for the given {@link InputTrack}. */
     constructor(track: InputTrack);
     /**
@@ -2288,15 +1662,8 @@ export declare class EncodedVideoPacketSource extends VideoSource {
  * @public
  */
 export declare class EventEmitter<TEvents extends Record<string, unknown>> {
-    /** @internal */
-    _listeners: Map<keyof TEvents, Set<{
-        fn: (data: never) => unknown;
-        once: boolean;
-    }>>;
     /** Registers a listener for the given event. Returns a function that, when called, removes the listener again. */
     on<K extends keyof TEvents>(event: K, listener: (data: TEvents[K]) => unknown, options?: EventListenerOptions_2): () => void;
-    /** @internal */
-    _emit<K extends keyof TEvents>(...args: TEvents[K] extends void ? [event: K] : [event: K, data: TEvents[K]]): void;
 }
 
 /**
@@ -2339,18 +1706,8 @@ export declare type FilePath = string;
  * @public
  */
 export declare class FilePathSource extends PathedSource {
-    /** @internal */
-    _customSource: CustomSource;
-    /** @internal */
-    _fileHandle: FileHandle | null;
     /** Creates a new {@link FilePathSource} backed by the file at the specified file path. */
     constructor(filePath: string, options?: FilePathSourceOptions);
-    /** @internal */
-    _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    _getFileSize(): number | null | undefined;
-    /** @internal */
-    _dispose(): void;
 }
 
 /**
@@ -2372,24 +1729,8 @@ export declare type FilePathSourceOptions = {
  * @public
  */
 export declare class FilePathTarget extends Target {
-    /** @internal */
-    _streamTarget: StreamTarget;
-    /** @internal */
-    _fileHandle: FileHandle | null;
     /** Creates a new {@link FilePathTarget} that writes to the file at the specified file path. */
     constructor(filePath: string, options?: FilePathTargetOptions);
-    /** @internal */
-    _start(): void;
-    /** @internal */
-    _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    _flush(): Promise<void>;
-    /** @internal */
-    _finalize(): Promise<void>;
-    /** @internal */
-    _close(): Promise<void | undefined>;
-    /** @internal */
-    _setMonotonicity(monotonicity: boolean): void;
 }
 
 /**
@@ -2398,41 +1739,6 @@ export declare class FilePathTarget extends Target {
  * @public
  */
 export declare type FilePathTargetOptions = StreamTargetOptions;
-
-declare class FileSlice {
-    /** The underlying bytes backing this slice. Avoid using this directly and prefer reader functions instead. */
-    readonly bytes: Uint8Array;
-    /** A view into the bytes backing this slice. Avoid using this directly and prefer reader functions instead. */
-    readonly view: DataView;
-    /** The offset in "file bytes" at which `bytes` begins in the file. */
-    private readonly offset;
-    /** The offset in "file bytes" where this slice begins. */
-    readonly start: number;
-    /** The offset in "file bytes" where this slice ends (exclusive). */
-    readonly end: number;
-    /** The current position in the backing buffer. Do not modify directly, prefer `.skip()` instead. */
-    bufferPos: number;
-    constructor(
-    /** The underlying bytes backing this slice. Avoid using this directly and prefer reader functions instead. */
-    bytes: Uint8Array, 
-    /** A view into the bytes backing this slice. Avoid using this directly and prefer reader functions instead. */
-    view: DataView, 
-    /** The offset in "file bytes" at which `bytes` begins in the file. */
-    offset: number, 
-    /** The offset in "file bytes" where this slice begins. */
-    start: number, 
-    /** The offset in "file bytes" where this slice ends (exclusive). */
-    end: number);
-    static tempFromBytes(bytes: Uint8Array): FileSlice;
-    get length(): number;
-    get filePos(): number;
-    set filePos(value: number);
-    /** The number of bytes left from the current pos to the end of the slice. */
-    get remainingLength(): number;
-    skip(byteCount: number): void;
-    /** Creates a new subslice of this slice whose byte range must be contained within this slice. */
-    slice(filePos: number, length?: number): FileSlice;
-}
 
 /**
  * FLAC input format singleton.
@@ -2450,42 +1756,8 @@ export declare const FLAC: FlacInputFormat;
  * @public
  */
 export declare class FlacInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
     get name(): string;
     get mimeType(): string;
-    /** @internal */
-    _createDemuxer(input: Input): Demuxer;
-}
-
-declare class FlacMuxer extends Muxer {
-    private writer;
-    private metadataWritten;
-    private blockSizes;
-    private frameSizes;
-    private sampleRate;
-    private channels;
-    private bitsPerSample;
-    private format;
-    constructor(output: Output, format: FlacOutputFormat);
-    start(): Promise<void>;
-    writeHeader({ bitsPerSample, minimumBlockSize, maximumBlockSize, minimumFrameSize, maximumFrameSize, sampleRate, channels, totalSamples, }: {
-        minimumBlockSize: number;
-        maximumBlockSize: number;
-        minimumFrameSize: number;
-        maximumFrameSize: number;
-        sampleRate: number;
-        channels: number;
-        bitsPerSample: number;
-        totalSamples: number;
-    }): void;
-    writePictureBlock(picture: AttachedImage): void;
-    writeVorbisCommentAndPictureBlock(): void;
-    getMimeType(): Promise<string>;
-    addEncodedVideoPacket(): Promise<void>;
-    addEncodedAudioPacket(track: OutputAudioTrack, packet: EncodedPacket, meta?: EncodedAudioChunkMetadata): Promise<void>;
-    addSubtitleCue(): Promise<void>;
-    finalize(): Promise<void>;
 }
 
 /**
@@ -2494,14 +1766,8 @@ declare class FlacMuxer extends Muxer {
  * @public
  */
 export declare class FlacOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: FlacOutputFormatOptions;
     /** Creates a new {@link FlacOutputFormat} configured with the specified `options`. */
     constructor(options?: FlacOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): FlacMuxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -2529,62 +1795,6 @@ export declare type FlacOutputFormatOptions = {
      * @param position - The byte offset of the data in the file.
      */
     onFrame?: (data: Uint8Array, position: number) => unknown;
-};
-
-declare type Fragment = {
-    moofOffset: number;
-    moofSize: number;
-    implicitBaseDataOffset: number;
-    trackData: Map<InternalTrack['id'], FragmentTrackData>;
-    psshBoxes: PsshBox[];
-};
-
-declare type FragmentLookupTableEntry = {
-    timestamp: number;
-    moofOffset: number;
-};
-
-declare type FragmentTrackData = {
-    track: InternalTrack;
-    currentTimestamp: number;
-    currentOffset: number;
-    startTimestamp: number;
-    endTimestamp: number;
-    firstKeyFrameTimestamp: number | null;
-    samples: FragmentTrackSample[];
-    presentationTimestamps: {
-        presentationTimestamp: number;
-        sampleIndex: number;
-    }[];
-    startTimestampIsFinal: boolean;
-    encryptionAuxInfo: SampleEncryptionAuxInfo | null;
-};
-
-declare type FragmentTrackDefaults = {
-    trackId: number;
-    defaultSampleDescriptionIndex: number;
-    defaultSampleDuration: number;
-    defaultSampleSize: number;
-    defaultSampleFlags: number;
-};
-
-declare type FragmentTrackSample = {
-    presentationTimestamp: number;
-    duration: number;
-    byteOffset: number;
-    byteSize: number;
-    isKeyFrame: boolean;
-    encryption: SampleEncryptionInfo | null;
-};
-
-declare type FragmentTrackState = {
-    baseDataOffset: number;
-    sampleDescriptionIndex: number | null;
-    defaultSampleDuration: number | null;
-    defaultSampleSize: number | null;
-    defaultSampleFlags: number | null;
-    startTimestamp: number | null;
-    encryptionAuxInfo: SampleEncryptionAuxInfo | null;
 };
 
 /**
@@ -2673,31 +1883,6 @@ export declare const getFirstEncodableVideoCodec: (checkedCodecs: VideoCodec[], 
     bitrate?: number | Quality;
 }) => Promise<VideoCodec | null>;
 
-declare type HevcDecoderConfigurationRecord = {
-    configurationVersion: number;
-    generalProfileSpace: number;
-    generalTierFlag: number;
-    generalProfileIdc: number;
-    generalProfileCompatibilityFlags: number;
-    generalConstraintIndicatorFlags: Uint8Array;
-    generalLevelIdc: number;
-    minSpatialSegmentationIdc: number;
-    parallelismType: number;
-    chromaFormatIdc: number;
-    bitDepthLumaMinus8: number;
-    bitDepthChromaMinus8: number;
-    avgFrameRate: number;
-    constantFrameRate: number;
-    numTemporalLayers: number;
-    temporalIdNested: number;
-    lengthSizeMinusOne: number;
-    arrays: {
-        arrayCompleteness: number;
-        nalUnitType: number;
-        nalUnits: Uint8Array[];
-    }[];
-};
-
 /**
  * HLS input format singleton.
  * @group Input formats
@@ -2713,31 +1898,6 @@ export declare const HLS: HlsInputFormat;
  */
 export declare const HLS_FORMATS: InputFormat[];
 
-declare class HlsDemuxer extends Demuxer {
-    metadataPromise: Promise<void> | null;
-    trackBackings: InputTrackBacking[] | null;
-    internalTracks: InternalTrack_2[] | null;
-    segmentedInputs: HlsSegmentedInput[];
-    hasMasterPlaylist: boolean;
-    constructor(input: Input);
-    readMetadata(): Promise<void>;
-    getTrackBackings(): Promise<InputTrackBacking[]>;
-    getSegmentedInputForPath(path: string): HlsSegmentedInput;
-    getMetadataTags(): Promise<MetadataTags>;
-    getMimeType(): Promise<string>;
-    dispose(): void;
-}
-
-declare type HlsEncryptionInfo = {
-    method: 'AES-128';
-    keyUri: string;
-    iv: Uint8Array | null;
-    keyFormat: string;
-} | {
-    method: 'SAMPLE-AES' | 'SAMPLE-AES-CTR';
-    psshBox: PsshBox | null;
-};
-
 /**
  * Media described using the HTTP Live Streaming (HLS) protocol, with playlists in the M3U8 format.
  *
@@ -2747,10 +1907,6 @@ declare type HlsEncryptionInfo = {
  * @public
  */
 export declare class HlsInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): HlsDemuxer;
     get name(): string;
     get mimeType(): string;
 }
@@ -2793,22 +1949,14 @@ export declare type HlsInputFormatOptions = {
  * @public
  */
 export declare class HlsOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: HlsOutputFormatOptions;
     /** Creates a new {@link HlsOutputFormat} configured with the specified `options`. */
     constructor(options: HlsOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): Muxer;
-    /** @internal */
-    get _name(): string;
     get fileExtension(): string;
     get mimeType(): string;
     getSupportedCodecs(): MediaCodec[];
     getSupportedTrackCounts(): TrackCountLimits;
     get supportsVideoRotationMetadata(): boolean;
     get supportsTimestampedMediaData(): boolean;
-    /** @internal */
-    _codecUnsupportedHint(codec: MediaCodec): string;
 }
 
 /**
@@ -2933,51 +2081,6 @@ export declare type HlsOutputSegmentInfo = {
     playlist: HlsOutputPlaylistInfo;
 };
 
-declare type HlsSegment = Segment & {
-    sequenceNumber: number | null;
-    location: HlsSegmentLocation;
-    encryption: HlsEncryptionInfo | null;
-    firstSegment: HlsSegment | null;
-    initSegment: HlsSegment | null;
-    lastProgramDateTimeSeconds: number | null;
-};
-
-declare class HlsSegmentedInput extends SegmentedInput {
-    rootPath: string;
-    demuxer: HlsDemuxer;
-    segments: HlsSegment[];
-    nextLines: string[] | null;
-    currentUpdateSegmentsPromise: Promise<void> | null;
-    streamHasEnded: boolean;
-    lastSegmentUpdateTime: number;
-    refreshInterval: number;
-    constructor(demuxer: HlsDemuxer, path: string, trackDeclarations: SegmentedInputTrackDeclaration[] | null, lines: string[] | null);
-    runUpdateSegments(): Promise<void>;
-    getRemainingWaitTimeMs(): number;
-    /**
-     * Reads and parses the segment info from the playlist file. When called more than one, it updates the existing
-     * segments by appending the new ones. Existing segments are never removed.
-     */
-    updateSegments(): Promise<void>;
-    getFirstSegment(): Promise<HlsSegment | null>;
-    getSegmentAt(timestamp: number, options: SegmentRetrievalOptions): Promise<HlsSegment | null>;
-    getNextSegment(segment: Segment, options: SegmentRetrievalOptions): Promise<HlsSegment | null>;
-    getPreviousSegment(segment: Segment): Promise<HlsSegment | null>;
-    getInputForSegment(segment: Segment): Input;
-    getLiveRefreshInterval(): Promise<number | null>;
-}
-
-declare type HlsSegmentLocation = {
-    path: string;
-    offset: number;
-    length: number | null;
-};
-
-declare type Hole = {
-    start: number;
-    end: number;
-};
-
 /**
  * Specifies an inclusive range of integers.
  * @group Miscellaneous
@@ -2998,40 +2101,6 @@ export declare type InclusiveIntegerRange = {
  * @public
  */
 export declare class Input<S extends Source = Source> extends EventEmitter<InputEvents> implements Disposable {
-    /** @internal */
-    _rootRef: SourceRef<S>;
-    /** @internal */
-    _formats: InputFormat[];
-    /** @internal */
-    _initInput: Input | null;
-    /** @internal */
-    _demuxerPromise: Promise<Demuxer> | null;
-    /** @internal */
-    _format: InputFormat | null;
-    /** @internal */
-    _reader: Reader;
-    /** @internal */
-    _trackBackingsCache: InputTrackBacking[] | null;
-    /** @internal */
-    _backingToTrack: Map<InputTrackBacking, InputTrack>;
-    /** @internal */
-    _disposed: boolean;
-    /** @internal */
-    _nextSourceCacheAge: number;
-    /** @internal */
-    _sourceRefs: SourceRef[];
-    /** @internal */
-    _sourceCache: SourceCacheEntry[];
-    /** @internal */
-    _sourceCachePromises: {
-        request: SourceRequest;
-        cacheGroup: number;
-        promise: Promise<SourceCacheEntry>;
-    }[];
-    /** @internal */
-    _formatOptions: InputFormatOptions;
-    /** @internal */
-    _onFormatDetermined: ((format: InputFormat) => void) | null;
     /** True if the input has been disposed. */
     get disposed(): boolean;
     /**
@@ -3039,14 +2108,6 @@ export declare class Input<S extends Source = Source> extends EventEmitter<Input
      * called on this instance.
      */
     constructor(options: InputOptions<S>);
-    /** @internal */
-    get _rootSource(): S;
-    /** @internal */
-    _getSourceUncached(request: SourceRequest): Promise<SourceRef<Source>>;
-    /** @internal */
-    _getSourceCached(request: SourceRequest, cacheGroup?: number): Promise<SourceRef>;
-    /** @internal */
-    _getDemuxer(): Promise<Demuxer>;
     /**
      * Returns the source from which this input file reads data for the root path.
      */
@@ -3120,10 +2181,6 @@ export declare class Input<S extends Source = Source> extends EventEmitter<Input
      * bitrate (higher bitrate is preferred), and if it can be paired with the primary video track.
      */
     getPrimaryAudioTrack(query?: InputTrackQuery<InputAudioTrack>): Promise<InputAudioTrack | null>;
-    /** @internal */
-    _getTrackBackings(): Promise<InputTrackBacking[]>;
-    /** @internal */
-    _wrapBackingAsTrack(backing: InputTrackBacking): InputTrack;
     /** Returns the full MIME type of this input file, including track codecs. */
     getMimeType(): Promise<string>;
     /**
@@ -3153,10 +2210,6 @@ export declare class Input<S extends Source = Source> extends EventEmitter<Input
  * @public
  */
 export declare class InputAudioTrack extends InputTrack {
-    /** @internal */
-    _backing: InputAudioTrackBacking;
-    /** @internal */
-    constructor(input: Input, backing: InputAudioTrackBacking);
     get type(): TrackType;
     /** The codec of the track's packets. */
     getCodec(): Promise<AudioCodec | null>;
@@ -3189,14 +2242,6 @@ export declare class InputAudioTrack extends InputTrack {
     getCodecParameterString(): Promise<string | null>;
     canDecode(): Promise<boolean>;
     determinePacketType(packet: EncodedPacket): Promise<PacketType | null>;
-}
-
-declare interface InputAudioTrackBacking extends InputTrackBacking {
-    getType(): 'audio';
-    getCodec(): MaybePromise<AudioCodec | null>;
-    getNumberOfChannels(): MaybePromise<number>;
-    getSampleRate(): MaybePromise<number>;
-    getDecoderConfig(): Promise<AudioDecoderConfig | null>;
 }
 
 /**
@@ -3234,19 +2279,10 @@ export declare type InputEvents = {
  * @public
  */
 export declare abstract class InputFormat {
-    /** @internal */
-    abstract _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    abstract _createDemuxer(input: Input): Demuxer;
     /** Returns the name of the input format. */
     abstract get name(): string;
     /** Returns the typical base MIME type of the input format. */
     abstract get mimeType(): string;
-    /**
-     * Provided for tree-shakable checking.
-     * @internal
-     */
-    _isIsobmff: boolean;
 }
 
 /**
@@ -3291,10 +2327,6 @@ export declare type InputOptions<S extends Source = Source> = {
 export declare abstract class InputTrack {
     /** The input file this track belongs to. */
     readonly input: Input;
-    /** @internal */
-    _backing: InputTrackBacking;
-    /** @internal */
-    constructor(input: Input, backing: InputTrackBacking);
     /** The type of the track. */
     abstract get type(): TrackType;
     /** Returns the codec of the track's packets. */
@@ -3500,33 +2532,6 @@ export declare abstract class InputTrack {
     hasPairableAudioTrack(predicate?: (track: InputAudioTrack) => MaybePromise<boolean>): Promise<boolean>;
 }
 
-declare interface InputTrackBacking {
-    getType(): TrackType;
-    getId(): number;
-    getNumber(): number;
-    getCodec(): MaybePromise<MediaCodec | null>;
-    getInternalCodecId(): MaybePromise<string | number | Uint8Array | null>;
-    getName(): MaybePromise<string | null>;
-    getLanguageCode(): MaybePromise<string>;
-    getTimeResolution(): MaybePromise<number>;
-    isRelativeToUnixEpoch(): MaybePromise<boolean>;
-    getUnixTimeForTimestamp(timestamp: number): MaybePromise<number | null>;
-    getDisposition(): MaybePromise<TrackDisposition>;
-    getPairingMask(): bigint;
-    getBitrate(): MaybePromise<number | null>;
-    getAverageBitrate(): MaybePromise<number | null>;
-    getDurationFromMetadata(options: DurationMetadataRequestOptions): Promise<number | null>;
-    getLiveRefreshInterval(): Promise<number | null>;
-    getHasOnlyKeyPackets?(): MaybePromise<boolean | null>;
-    getDecoderConfig(): Promise<VideoDecoderConfig | AudioDecoderConfig | null>;
-    getMetadataCodecParameterString?(): MaybePromise<string | null>;
-    getFirstPacket(options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getPacket(timestamp: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getNextPacket(packet: EncodedPacket, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getKeyPacket(timestamp: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getNextKeyPacket(packet: EncodedPacket, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-}
-
 /**
  * Defines a query for input tracks. Can be used to query tracks tersely and expressively, which is especially useful
  * for media inputs with many tracks, such as HLS manifests.
@@ -3558,12 +2563,6 @@ export declare type InputTrackQuery<T extends InputTrack> = {
  * @public
  */
 export declare class InputVideoTrack extends InputTrack {
-    /** @internal */
-    _backing: InputVideoTrackBacking;
-    /** @internal */
-    _pixelAspectRatioCache: Rational | null;
-    /** @internal */
-    constructor(input: Input, backing: InputVideoTrackBacking);
     get type(): TrackType;
     /** The codec of the track's packets. */
     getCodec(): Promise<VideoCodec | null>;
@@ -3654,200 +2653,6 @@ export declare class InputVideoTrack extends InputTrack {
     determinePacketType(packet: EncodedPacket): Promise<PacketType | null>;
 }
 
-declare interface InputVideoTrackBacking extends InputTrackBacking {
-    getType(): 'video';
-    getCodec(): MaybePromise<VideoCodec | null>;
-    getCodedWidth(): MaybePromise<number>;
-    getCodedHeight(): MaybePromise<number>;
-    getSquarePixelWidth(): MaybePromise<number>;
-    getSquarePixelHeight(): MaybePromise<number>;
-    getMetadataDisplayWidth?(): MaybePromise<number | null>;
-    getMetadataDisplayHeight?(): MaybePromise<number | null>;
-    getRotation(): MaybePromise<Rotation>;
-    getColorSpace(): Promise<VideoColorSpaceInit>;
-    canBeTransparent(): Promise<boolean>;
-    getDecoderConfig(): Promise<VideoDecoderConfig | null>;
-}
-
-declare type InternalTrack = {
-    id: number;
-    demuxer: IsobmffDemuxer;
-    trackBacking: InputTrackBacking | null;
-    disposition: TrackDisposition;
-    timescale: number;
-    durationInMovieTimescale: number;
-    durationInMediaTimescale: number;
-    rotation: Rotation;
-    internalCodecId: string | null;
-    name: string | null;
-    languageCode: string;
-    sampleTableByteOffset: number | null;
-    sampleTable: SampleTable | null;
-    fragmentLookupTable: FragmentLookupTableEntry[];
-    currentFragmentState: FragmentTrackState | null;
-    /**
-     * List of all encountered fragment offsets alongside their timestamps. This list never gets truncated, but memory
-     * consumption should be negligible.
-     */
-    fragmentPositionCache: {
-        moofOffset: number;
-        startTimestamp: number;
-        endTimestamp: number;
-    }[];
-    /** The segment durations of all edit list entries leading up to the main one (from which the offset is taken.) */
-    editListPreviousSegmentDurations: number;
-    /** The media time offset of the main edit list entry (with media time !== -1) */
-    editListOffset: number;
-    /** Set when the track's samples are encrypted using a supported scheme (cenc/cens/cbcs), parsed from sinf/tenc. */
-    encryptionInfo: TrackEncryptionInfo | null;
-    /** For non-fragmented encrypted tracks: parsed saiz+saio from stbl; aux info is fetched lazily on first use. */
-    encryptionAuxInfo: SampleEncryptionAuxInfo | null;
-    frmaCodecString: string | null;
-} & ({
-    info: null;
-} | {
-    info: {
-        type: 'video';
-        width: number;
-        height: number;
-        squarePixelWidth: number;
-        squarePixelHeight: number;
-        codec: VideoCodec | null;
-        codecDescription: Uint8Array | null;
-        colorSpace: VideoColorSpaceInit | null;
-        avcType: 1 | 3 | null;
-        avcCodecInfo: AvcDecoderConfigurationRecord | null;
-        hevcCodecInfo: HevcDecoderConfigurationRecord | null;
-        vp9CodecInfo: Vp9CodecInfo | null;
-        av1CodecInfo: Av1CodecInfo | null;
-    };
-} | {
-    info: {
-        type: 'audio';
-        numberOfChannels: number;
-        sampleRate: number;
-        codec: AudioCodec | null;
-        codecDescription: Uint8Array | null;
-        aacCodecInfo: AacCodecInfo | null;
-        pcmLittleEndian: boolean;
-        pcmSampleSize: number | null;
-    };
-});
-
-declare type InternalTrack_2 = {
-    id: number;
-    demuxer: HlsDemuxer;
-    backingTrack: InputTrackBacking | null;
-    default: boolean;
-    autoselect: boolean;
-    languageCode: string;
-    lineNumber: number;
-    fullPath: string;
-    fullCodecString: string;
-    pairingMask: bigint;
-    peakBitrate: number | null;
-    averageBitrate: number | null;
-    name: string | null;
-    hasOnlyKeyPackets: boolean;
-    info: {
-        type: 'video';
-        width: number | null;
-        height: number | null;
-    } | {
-        type: 'audio';
-        numberOfChannels: number | null;
-    };
-};
-
-declare type InternalTrack_3 = {
-    id: number;
-    demuxer: MatroskaDemuxer;
-    segment: Segment_2;
-    /**
-     * List of all encountered cluster offsets alongside their timestamps. This list never gets truncated, but memory
-     * consumption should be negligible.
-     */
-    clusterPositionCache: {
-        elementStartPos: number;
-        startTimestamp: number;
-    }[];
-    cuePoints: CuePoint[];
-    disposition: TrackDisposition;
-    trackBacking: InputTrackBacking | null;
-    codecId: string | null;
-    codecPrivate: Uint8Array | null;
-    defaultDuration: number | null;
-    defaultDurationNs: number | null;
-    name: string | null;
-    languageCode: string;
-    hasLanguageBcp47: boolean;
-    decodingInstructions: DecodingInstruction[];
-    info: null | {
-        type: 'video';
-        width: number;
-        height: number;
-        displayWidth: number | null;
-        displayHeight: number | null;
-        displayUnit: number | null;
-        squarePixelWidth: number;
-        squarePixelHeight: number;
-        rotation: Rotation;
-        codec: VideoCodec | null;
-        codecDescription: Uint8Array | null;
-        colorSpace: VideoColorSpaceInit | null;
-        alphaMode: boolean;
-    } | {
-        type: 'audio';
-        numberOfChannels: number;
-        sampleRate: number;
-        bitDepth: number;
-        codec: AudioCodec | null;
-        codecDescription: Uint8Array | null;
-        aacCodecInfo: AacCodecInfo | null;
-    };
-};
-
-declare class IsobmffDemuxer extends Demuxer {
-    reader: Reader;
-    moovSlice: FileSlice | null;
-    currentTrack: InternalTrack | null;
-    tracks: InternalTrack[];
-    metadataPromise: Promise<void> | null;
-    movieTimescale: number;
-    movieDurationInTimescale: number;
-    isQuickTime: boolean;
-    metadataTags: MetadataTags;
-    currentMetadataKeys: Map<number, string> | null;
-    isFragmented: boolean;
-    fragmentTrackDefaults: FragmentTrackDefaults[];
-    psshBoxes: PsshBox[];
-    currentFragment: Fragment | null;
-    /**
-     * Caches the last fragment that was read. Based on the assumption that there will be multiple reads to the
-     * same fragment in quick succession.
-     */
-    lastReadFragment: Fragment | null;
-    decryptionKeyCache: Map<string, Promise<Uint8Array<ArrayBufferLike>>>;
-    constructor(input: Input);
-    getTrackBackings(): Promise<InputTrackBacking[]>;
-    getMimeType(): Promise<string>;
-    getMetadataTags(): Promise<MetadataTags>;
-    readMetadata(): Promise<void>;
-    getSampleTableForTrack(internalTrack: InternalTrack): SampleTable;
-    readFragment(startPos: number): Promise<Fragment>;
-    readContiguousBoxes(slice: FileSlice): void;
-    iterateContiguousBoxes(slice: FileSlice): Generator<{
-        boxInfo: {
-            name: string;
-            totalSize: number;
-            headerSize: number;
-            contentSize: number;
-        };
-        slice: FileSlice;
-    }, void, unknown>;
-    traverseBox(slice: FileSlice): boolean;
-}
-
 /**
  * Format representing files compatible with the ISO base media file format (ISOBMFF), like MP4 or MOV files.
  *
@@ -3858,12 +2663,6 @@ declare class IsobmffDemuxer extends Demuxer {
  * @public
  */
 export declare abstract class IsobmffInputFormat extends InputFormat {
-    /** @internal */
-    protected _getMajorBrand(input: Input): Promise<string | null>;
-    /** @internal */
-    _createDemuxer(input: Input): IsobmffDemuxer;
-    /** @internal */
-    _isIsobmff: boolean;
 }
 
 /**
@@ -3887,61 +2686,7 @@ export declare type IsobmffInputFormatOptions = {
          */
         psshBoxes: PsshBox[];
     }) => MaybePromise<Uint8Array | string>;
-    /** @internal */
-    _suppressPsshParsing?: boolean;
 };
-
-declare class IsobmffMuxer extends Muxer {
-    format: IsobmffOutputFormat;
-    private writer;
-    private boxWriter;
-    private initWriter;
-    private initBoxWriter;
-    private fastStart;
-    isFragmented: boolean;
-    isQuickTime: boolean;
-    isCmaf: boolean;
-    private auxTarget;
-    private auxWriter;
-    private auxBoxWriter;
-    private mdat;
-    private ftypSize;
-    trackDatas: IsobmffTrackData[];
-    private allTracksKnown;
-    creationTime: number;
-    private finalizedChunks;
-    private nextFragmentNumber;
-    private maxWrittenTimestamp;
-    minWrittenTimestamp: number;
-    maxWrittenEndTimestamp: number;
-    private minimumFragmentDuration;
-    private segmentHeaderSize;
-    constructor(output: Output, format: IsobmffOutputFormat);
-    start(): Promise<void>;
-    private allTracksAreKnown;
-    getMimeType(): Promise<string>;
-    private getVideoTrackData;
-    private getAudioTrackData;
-    private getSubtitleTrackData;
-    addEncodedVideoPacket(track: OutputVideoTrack, packet: EncodedPacket, meta?: EncodedVideoChunkMetadata): Promise<void>;
-    addEncodedAudioPacket(track: OutputAudioTrack, packet: EncodedPacket, meta?: EncodedAudioChunkMetadata): Promise<void>;
-    private padWithSilence;
-    addSubtitleCue(track: OutputSubtitleTrack, cue: SubtitleCue, meta?: SubtitleMetadata): Promise<void>;
-    private processWebVTTCues;
-    private createSampleForTrack;
-    private processTimestamps;
-    private registerSample;
-    private addSampleToTrack;
-    private finalizeCurrentChunk;
-    private interleaveSamples;
-    private finalizeFragment;
-    private registerSampleFastStartReserve;
-    private computeSampleTableSizeUpperBound;
-    onTrackClose(track: OutputTrack): Promise<void>;
-    ensureOneEnabledTrack(): void;
-    /** Finalizes the file, making it ready for use. Must be called after all video and audio chunks have been added. */
-    finalize(): Promise<void>;
-}
 
 /**
  * Format representing files compatible with the ISO base media file format (ISOBMFF), like MP4 or MOV files.
@@ -3949,15 +2694,11 @@ declare class IsobmffMuxer extends Muxer {
  * @public
  */
 export declare abstract class IsobmffOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: IsobmffOutputFormatOptions;
     /** Internal constructor. */
     constructor(options?: IsobmffOutputFormatOptions);
     getSupportedTrackCounts(): TrackCountLimits;
     get supportsVideoRotationMetadata(): boolean;
     get supportsTimestampedMediaData(): boolean;
-    /** @internal */
-    _createMuxer(output: Output): IsobmffMuxer;
 }
 
 /**
@@ -4043,77 +2784,6 @@ export declare type IsobmffOutputFormatOptions = {
     onMoof?: (data: Uint8Array, position: number, timestamp: number) => unknown;
 };
 
-declare type IsobmffTrackData = {
-    muxer: IsobmffMuxer;
-    timescale: number;
-    samples: Sample[];
-    sampleQueue: Sample[];
-    timestampProcessingQueue: Sample[];
-    timeToSampleTable: {
-        sampleCount: number;
-        sampleDelta: number;
-    }[];
-    compositionTimeOffsetTable: {
-        sampleCount: number;
-        sampleCompositionTimeOffset: number;
-    }[];
-    lastTimescaleUnits: number | null;
-    lastSample: Sample | null;
-    startTimestampOffset: number | null;
-    finalizedChunks: Chunk[];
-    currentChunk: Chunk | null;
-    compactlyCodedChunkTable: {
-        firstChunk: number;
-        samplesPerChunk: number;
-    }[];
-    closed: boolean;
-} & ({
-    track: OutputVideoTrack;
-    type: 'video';
-    info: {
-        width: number;
-        height: number;
-        pixelAspectRatio: Rational;
-        decoderConfig: VideoDecoderConfig;
-        /**
-         * The "Annex B transformation" involves converting the raw packet data from Annex B to
-         * "MP4" (length-prefixed) format.
-         * https://stackoverflow.com/questions/24884827
-         */
-        requiresAnnexBTransformation: boolean;
-    };
-} | {
-    track: OutputAudioTrack;
-    type: 'audio';
-    info: {
-        numberOfChannels: number;
-        sampleRate: number;
-        decoderConfig: AudioDecoderConfig;
-        /**
-         * The "PCM transformation" is making every sample in the sample table be exactly one PCM audio sample long.
-         * Some players expect this for PCM audio.
-         */
-        requiresPcmTransformation: boolean;
-        expectedNextPcmPacketTimestamp: number | null;
-        /**
-         * The "ADTS stripping" involves removing the ADTS header from each AAC packet. SOBMFF stores raw AAC data, not
-         * ADTS-wrapped data.
-         */
-        requiresAdtsStripping: boolean;
-        firstPacket: EncodedPacket;
-    };
-} | {
-    track: OutputSubtitleTrack;
-    type: 'subtitle';
-    info: {
-        config: SubtitleConfig;
-    };
-    lastCueEndTimestamp: number;
-    cueQueue: SubtitleCue[];
-    nextSourceId: number;
-    cueToSourceId: WeakMap<SubtitleCue, number>;
-});
-
 /**
  * Mediabunny's central logging singleton. Use {@link Logging.level} to control how much is printed to the console,
  * and subscribe to log events using {@link Logging.on}.
@@ -4125,23 +2795,11 @@ declare type IsobmffTrackData = {
  */
 export declare class Logging {
     private constructor();
-    /** @internal */
-    static _level: LogLevel;
-    /** @internal */
-    static _emitterInstance: EventEmitter<LoggingEvents> | null;
     /** The current log level. Defaults to {@link LogLevel.Info}. */
     static get level(): LogLevel;
     static set level(value: LogLevel);
-    /** @internal */
-    static get _emitter(): EventEmitter<LoggingEvents>;
     /** Registers a listener for a log event. Returns a function that, when called, removes the listener again. */
     static on<K extends keyof LoggingEvents>(event: K, listener: (data: LoggingEvents[K]) => unknown, options?: EventListenerOptions_2): () => void;
-    /** @internal */
-    static _error(...args: unknown[]): void;
-    /** @internal */
-    static _warn(...args: unknown[]): void;
-    /** @internal */
-    static _info(...args: unknown[]): void;
 }
 
 /**
@@ -4158,16 +2816,6 @@ export declare type LoggingEvents = {
     warn: unknown[];
     /** Emitted before an informational message is logged. */
     info: unknown[];
-};
-
-declare type LogicalBitstream = {
-    serialNumber: number;
-    bosPage: Page;
-    description: Uint8Array | null;
-    numberOfChannels: number;
-    sampleRate: number;
-    codecInfo: OggCodecInfo;
-    lastMetadataPacket: Packet_2 | null;
 };
 
 /**
@@ -4194,46 +2842,6 @@ export declare enum LogLevel {
  */
 export declare const MATROSKA: MatroskaInputFormat;
 
-declare class MatroskaDemuxer extends Demuxer {
-    reader: Reader;
-    readMetadataPromise: Promise<void> | null;
-    segments: Segment_2[];
-    currentSegment: Segment_2 | null;
-    currentTrack: InternalTrack_3 | null;
-    currentCluster: Cluster | null;
-    currentBlock: ClusterBlock | null;
-    currentBlockAdditional: {
-        addId: number;
-        data: Uint8Array | null;
-    } | null;
-    currentCueTime: number | null;
-    currentDecodingInstruction: DecodingInstruction | null;
-    currentTagTargetIsMovie: boolean;
-    currentSimpleTagName: string | null;
-    currentAttachedFile: {
-        fileUid: bigint | null;
-        fileName: string | null;
-        fileMediaType: string | null;
-        fileData: Uint8Array | null;
-        fileDescription: string | null;
-    } | null;
-    isWebM: boolean;
-    constructor(input: Input);
-    getTrackBackings(): Promise<InputTrackBacking[]>;
-    getMimeType(): Promise<string>;
-    getMetadataTags(): Promise<MetadataTags>;
-    readMetadata(): Promise<void>;
-    readSegment(segmentDataStart: number, dataSize: number | undefined): Promise<void>;
-    readCluster(startPos: number, segment: Segment_2): Promise<Cluster>;
-    getTrackDataInCluster(cluster: Cluster, trackNumber: number): ClusterTrackData | null;
-    expandLacedBlocks(blocks: ClusterBlock[], track: InternalTrack_3): void;
-    loadSegmentMetadata(segment: Segment_2): Promise<void>;
-    readContiguousElements(slice: FileSlice, stopIds?: number[]): number;
-    traverseElement(slice: FileSlice, stopIds?: number[]): boolean;
-    decodeBlockData(track: InternalTrack_3, rawData: Uint8Array): Uint8Array<ArrayBufferLike>;
-    processTagValue(name: string, value: string | Uint8Array): void;
-}
-
 /**
  * Matroska file format.
  *
@@ -4243,78 +2851,8 @@ declare class MatroskaDemuxer extends Demuxer {
  * @public
  */
 export declare class MatroskaInputFormat extends InputFormat {
-    /** @internal */
-    protected isSupportedEBMLOfDocType(input: Input, desiredDocType: string): Promise<boolean>;
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): MatroskaDemuxer;
     get name(): string;
     get mimeType(): string;
-}
-
-declare class MatroskaMuxer extends Muxer {
-    private writer;
-    private ebmlWriter;
-    private format;
-    private trackDatas;
-    private allTracksKnown;
-    private segment;
-    private segmentInfo;
-    private seekHead;
-    private tracksElement;
-    private tagsElement;
-    private attachmentsElement;
-    private segmentDuration;
-    private cues;
-    private currentCluster;
-    private currentClusterStartMsTimestamp;
-    private currentClusterMaxMsTimestamp;
-    private trackDatasInCurrentCluster;
-    private startTimestamp;
-    private endTimestamp;
-    constructor(output: Output, format: MkvOutputFormat);
-    start(): Promise<void>;
-    private writeEBMLHeader;
-    /**
-     * Creates a SeekHead element which is positioned near the start of the file and allows the media player to seek to
-     * relevant sections more easily. Since we don't know the positions of those sections yet, we'll set them later.
-     */
-    private maybeCreateSeekHead;
-    private createSegmentInfo;
-    private createTracks;
-    private videoSpecificTrackInfo;
-    private audioSpecificTrackInfo;
-    private subtitleSpecificTrackInfo;
-    private maybeCreateTags;
-    private maybeCreateAttachments;
-    private createSegment;
-    private createCues;
-    private get segmentDataOffset();
-    private allTracksAreKnown;
-    getMimeType(): Promise<string>;
-    private getVideoTrackData;
-    private getAudioTrackData;
-    private getSubtitleTrackData;
-    addEncodedVideoPacket(track: OutputVideoTrack, packet: EncodedPacket, meta?: EncodedVideoChunkMetadata): Promise<void>;
-    addEncodedAudioPacket(track: OutputAudioTrack, packet: EncodedPacket, meta?: EncodedAudioChunkMetadata): Promise<void>;
-    addSubtitleCue(track: OutputSubtitleTrack, cue: SubtitleCue, meta?: SubtitleMetadata): Promise<void>;
-    private interleaveChunks;
-    /**
-     * Due to [a bug in Chromium](https://bugs.chromium.org/p/chromium/issues/detail?id=1377842), VP9 streams often
-     * lack color space information. This method patches in that information.
-     */
-    private fixVP9ColorSpace;
-    /** Converts a read-only external chunk into an internal one for easier use. */
-    private createInternalChunk;
-    /** Writes a block containing media data to the file. */
-    private writeBlock;
-    /** Creates a new Cluster element to contain media chunks. */
-    private createNewCluster;
-    private finalizeCurrentCluster;
-    onTrackClose(track: OutputTrack): Promise<void>;
-    /** Finalizes the file, making it ready for use. Must be called after all media chunks have been added. */
-    finalize(): Promise<void>;
 }
 
 /**
@@ -4337,28 +2875,12 @@ export declare type MediaCodec = VideoCodec | AudioCodec | SubtitleCodec;
  * @public
  */
 declare abstract class MediaSource_2 {
-    /** @internal */
-    abstract readonly _codec: MediaCodec;
-    /** @internal */
-    _connectedTrack: OutputTrack | null;
-    /** @internal */
-    _closingPromise: Promise<void> | null;
-    /** @internal */
-    _closed: boolean;
-    /** @internal */
-    _ensureValidAdd(): void;
-    /** @internal */
-    _start(): Promise<void>;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
     /**
      * Closes this source. This prevents future samples from being added and signals to the output file that no further
      * samples will come in for this track. Calling `.close()` is optional but recommended after adding the
      * last sample - for improved performance and reduced memory usage.
      */
     close(): void;
-    /** @internal */
-    _flushOrWaitForOngoingClose(forceClose: boolean): Promise<void>;
 }
 export { MediaSource_2 as MediaSource }
 
@@ -4372,24 +2894,6 @@ export { MediaSource_2 as MediaSource }
  * @public
  */
 export declare class MediaStreamAudioTrackSource extends AudioSource {
-    /** @internal */
-    private _options;
-    /** @internal */
-    private _encoder;
-    /** @internal */
-    private _abortController;
-    /** @internal */
-    private _track;
-    /** @internal */
-    private _audioContext;
-    /** @internal */
-    private _scriptProcessorNode;
-    /** @internal */
-    private _promiseWithResolvers;
-    /** @internal */
-    private _errorPromiseAccessed;
-    /** @internal */
-    private _paused;
     /** A promise that rejects upon any error within this source. This promise never resolves. */
     get errorPromise(): Promise<void>;
     /** Whether this source is currently paused as a result of calling `.pause()`. */
@@ -4399,8 +2903,6 @@ export declare class MediaStreamAudioTrackSource extends AudioSource {
      * from the stream in real time and encode them according to {@link AudioEncodingConfig}.
      */
     constructor(track: MediaStreamAudioTrack, encodingConfig: AudioEncodingConfig, options?: MediaStreamAudioTrackSourceOptions);
-    /** @internal */
-    _start(): Promise<void>;
     /**
      * Pauses the capture of audio data - any audio data emitted by the underlying media stream will be ignored
      * while paused. This does *not* close the underlying `MediaStreamAudioTrack`, it just ignores its output.
@@ -4408,8 +2910,6 @@ export declare class MediaStreamAudioTrackSource extends AudioSource {
     pause(): void;
     /** Resumes the capture of audio data after being paused. */
     resume(): void;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
 
 /**
@@ -4445,30 +2945,6 @@ export declare type MediaStreamAudioTrackSourceOptions = {
  * @public
  */
 export declare class MediaStreamVideoTrackSource extends VideoSource {
-    /** @internal */
-    private _options;
-    /** @internal */
-    private _encoder;
-    /** @internal */
-    private _abortController;
-    /** @internal */
-    private _track;
-    /** @internal */
-    private _workerTrackId;
-    /** @internal */
-    private _workerListener;
-    /** @internal */
-    private _promiseWithResolvers;
-    /** @internal */
-    private _errorPromiseAccessed;
-    /** @internal */
-    private _paused;
-    /** @internal */
-    private _lastVideoFrame;
-    /** @internal */
-    private _timerHandle;
-    /** @internal */
-    private _videoElement;
     /** A promise that rejects upon any error within this source. This promise never resolves. */
     get errorPromise(): Promise<void>;
     /** Whether this source is currently paused as a result of calling `.pause()`. */
@@ -4479,8 +2955,6 @@ export declare class MediaStreamVideoTrackSource extends VideoSource {
      * video samples from the stream in real time and encode them according to {@link VideoEncodingConfig}.
      */
     constructor(track: MediaStreamVideoTrack, encodingConfig: VideoEncodingConfig, options?: MediaStreamVideoTrackSourceOptions);
-    /** @internal */
-    _start(): Promise<void>;
     /**
      * Pauses the capture of video frames - any video frames emitted by the underlying media stream will be ignored
      * while paused. This does *not* close the underlying `MediaStreamVideoTrack`, it just ignores its output.
@@ -4488,8 +2962,6 @@ export declare class MediaStreamVideoTrackSource extends VideoSource {
     pause(): void;
     /** Resumes the capture of video frames after being paused. */
     resume(): void;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
 
 /**
@@ -4610,14 +3082,8 @@ export declare type MetadataTags = {
  * @public
  */
 export declare class MkvOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: MkvOutputFormatOptions;
     /** Creates a new {@link MkvOutputFormat} configured with the specified `options`. */
     constructor(options?: MkvOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): MatroskaMuxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -4676,13 +3142,9 @@ export declare type MkvOutputFormatOptions = {
 export declare class MovOutputFormat extends IsobmffOutputFormat {
     /** Creates a new {@link MovOutputFormat} configured with the specified `options`. */
     constructor(options?: IsobmffOutputFormatOptions);
-    /** @internal */
-    get _name(): string;
     get fileExtension(): string;
     get mimeType(): string;
     getSupportedCodecs(): MediaCodec[];
-    /** @internal */
-    _codecUnsupportedHint(codec: MediaCodec): "" | " Switching to MP4 will grant support for this codec.";
 }
 
 /**
@@ -4691,84 +3153,6 @@ export declare class MovOutputFormat extends IsobmffOutputFormat {
  * @public
  */
 export declare const MP3: Mp3InputFormat;
-
-declare class Mp3AudioTrackBacking implements InputAudioTrackBacking {
-    demuxer: Mp3Demuxer;
-    constructor(demuxer: Mp3Demuxer);
-    getType(): "audio";
-    getId(): number;
-    getNumber(): number;
-    getTimeResolution(): number;
-    isRelativeToUnixEpoch(): boolean;
-    getUnixTimeForTimestamp(): null;
-    getPairingMask(): bigint;
-    getBitrate(): null;
-    getAverageBitrate(): null;
-    getDurationFromMetadata(): Promise<number | null>;
-    getLiveRefreshInterval(): Promise<null>;
-    getName(): null;
-    getLanguageCode(): string;
-    getCodec(): AudioCodec;
-    getInternalCodecId(): null;
-    getNumberOfChannels(): 1 | 2;
-    getSampleRate(): number;
-    getDisposition(): {
-        default: boolean;
-        primary: boolean;
-        forced: boolean;
-        original: boolean;
-        commentary: boolean;
-        hearingImpaired: boolean;
-        visuallyImpaired: boolean;
-    };
-    getDecoderConfig(): Promise<AudioDecoderConfig>;
-    getPacketAtIndex(sampleIndex: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getFirstPacket(options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getNextPacket(packet: EncodedPacket, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getPacket(timestamp: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getKeyPacket(timestamp: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getNextKeyPacket(packet: EncodedPacket, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-}
-
-declare class Mp3Demuxer extends Demuxer {
-    reader: Reader;
-    metadataPromise: Promise<void> | null;
-    firstFrameHeader: Mp3FrameHeader | null;
-    firstFrameHeaderPos: number | null;
-    loadedSamples: Sample_3[];
-    metadataTags: MetadataTags | null;
-    xingData: {
-        frameCount: number | null;
-        fileSize: number | null;
-    } | null;
-    trackBackings: Mp3AudioTrackBacking[];
-    readingMutex: AsyncMutex;
-    lastSampleLoaded: boolean;
-    lastLoadedPos: number;
-    nextTimestampInSamples: number;
-    constructor(input: Input);
-    readMetadata(): Promise<void>;
-    advanceReader(): Promise<void>;
-    getMimeType(): Promise<string>;
-    getTrackBackings(): Promise<Mp3AudioTrackBacking[]>;
-    getMetadataTags(): Promise<MetadataTags>;
-}
-
-declare type Mp3FrameHeader = {
-    totalSize: number;
-    mpegVersionId: number;
-    lowSamplingFrequency: number;
-    layer: number;
-    bitrate: number;
-    frequencyIndex: number;
-    sampleRate: number;
-    channel: number;
-    modeExtension: number;
-    copyright: number;
-    original: number;
-    emphasis: number;
-    audioSamplesInFrame: number;
-};
 
 /**
  * MP3 file format.
@@ -4779,29 +3163,8 @@ declare type Mp3FrameHeader = {
  * @public
  */
 export declare class Mp3InputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): Mp3Demuxer;
     get name(): string;
     get mimeType(): string;
-}
-
-declare class Mp3Muxer extends Muxer {
-    private format;
-    private writer;
-    private mp3Writer;
-    private xingFrameData;
-    private frameCount;
-    private framePositions;
-    private xingFramePos;
-    constructor(output: Output, format: Mp3OutputFormat);
-    start(): Promise<void>;
-    getMimeType(): Promise<string>;
-    addEncodedVideoPacket(): Promise<void>;
-    addEncodedAudioPacket(track: OutputAudioTrack, packet: EncodedPacket): Promise<void>;
-    addSubtitleCue(): Promise<void>;
-    finalize(): Promise<void>;
 }
 
 /**
@@ -4810,14 +3173,8 @@ declare class Mp3Muxer extends Muxer {
  * @public
  */
 export declare class Mp3OutputFormat extends OutputFormat {
-    /** @internal */
-    _options: Mp3OutputFormatOptions;
     /** Creates a new {@link Mp3OutputFormat} configured with the specified `options`. */
     constructor(options?: Mp3OutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): Mp3Muxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -4862,8 +3219,6 @@ export declare const MP4: Mp4InputFormat;
  * @public
  */
 export declare class Mp4InputFormat extends IsobmffInputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
     get name(): string;
     get mimeType(): string;
 }
@@ -4876,13 +3231,9 @@ export declare class Mp4InputFormat extends IsobmffInputFormat {
 export declare class Mp4OutputFormat extends IsobmffOutputFormat {
     /** Creates a new {@link Mp4OutputFormat} configured with the specified `options`. */
     constructor(options?: IsobmffOutputFormatOptions);
-    /** @internal */
-    get _name(): string;
     get fileExtension(): string;
     get mimeType(): string;
     getSupportedCodecs(): MediaCodec[];
-    /** @internal */
-    _codecUnsupportedHint(codec: MediaCodec): "" | " Switching to MOV will grant support for this codec.";
 }
 
 /**
@@ -4891,26 +3242,6 @@ export declare class Mp4OutputFormat extends IsobmffOutputFormat {
  * @public
  */
 export declare const MPEG_TS: MpegTsInputFormat;
-
-declare class MpegTsDemuxer extends Demuxer {
-    reader: Reader;
-    metadataPromise: Promise<void> | null;
-    elementaryStreams: ElementaryStream[];
-    trackBackingEntries: InputTrackBacking[];
-    packetOffset: number;
-    packetStride: number;
-    sectionEndPositions: number[];
-    seekChunkSize: number;
-    minReferencePointByteDistance: number;
-    constructor(input: Input);
-    readMetadata(): Promise<void>;
-    getTrackBackings(): Promise<InputTrackBacking[]>;
-    getMetadataTags(): Promise<MetadataTags>;
-    getMimeType(): Promise<string>;
-    readSection(startPos: number, full: boolean, contiguous?: boolean): Promise<Section | null>;
-    readPacketHeader(pos: number): Promise<TsPacketHeader | null>;
-    readPacket(pos: number): Promise<TsPacket | null>;
-}
 
 /**
  * MPEG Transport Stream (MPEG-TS) file format.
@@ -4925,48 +3256,8 @@ declare class MpegTsDemuxer extends Demuxer {
  * @public
  */
 export declare class MpegTsInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): MpegTsDemuxer;
     get name(): string;
     get mimeType(): string;
-}
-
-declare class MpegTsMuxer extends Muxer {
-    private format;
-    private writer;
-    private trackDatas;
-    private tablesWritten;
-    private continuityCounters;
-    private packetBuffer;
-    private packetView;
-    private allTracksKnown;
-    private videoTrackIndex;
-    private audioTrackIndex;
-    private adaptationFieldBuffer;
-    private payloadBuffer;
-    constructor(output: Output, format: MpegTsOutputFormat);
-    start(): Promise<void>;
-    getMimeType(): Promise<string>;
-    private getVideoTrackData;
-    private getAudioTrackData;
-    addEncodedVideoPacket(track: OutputVideoTrack, packet: EncodedPacket, meta?: EncodedVideoChunkMetadata): Promise<void>;
-    addEncodedAudioPacket(track: OutputAudioTrack, packet: EncodedPacket, meta?: EncodedAudioChunkMetadata): Promise<void>;
-    addSubtitleCue(): Promise<void>;
-    private prepareVideoPacket;
-    private prepareAnnexBVideoPacket;
-    private prepareLengthPrefixedVideoPacket;
-    private prepareAudioPacket;
-    private allTracksAreKnown;
-    private flushTimestampQueue;
-    private interleavePackets;
-    private writeTables;
-    private writePsiSection;
-    private writePesPacket;
-    private writeTsPacket;
-    onTrackClose(track: OutputTrack): Promise<void>;
-    finalize(): Promise<void>;
 }
 
 /**
@@ -4975,14 +3266,8 @@ declare class MpegTsMuxer extends Muxer {
  * @public
  */
 export declare class MpegTsOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: MpegTsOutputFormatOptions;
     /** Creates a new {@link MpegTsOutputFormat} configured with the specified `options`. */
     constructor(options?: MpegTsOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): MpegTsMuxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -5006,21 +3291,6 @@ export declare type MpegTsOutputFormatOptions = {
     onPacket?: (data: Uint8Array, position: number) => unknown;
 };
 
-declare abstract class Muxer {
-    output: Output;
-    mutex: AsyncMutex;
-    constructor(output: Output);
-    abstract start(): Promise<void>;
-    abstract getMimeType(): Promise<string>;
-    abstract addEncodedVideoPacket(track: OutputVideoTrack, packet: EncodedPacket, meta?: EncodedVideoChunkMetadata): Promise<void>;
-    abstract addEncodedAudioPacket(track: OutputAudioTrack, packet: EncodedPacket, meta?: EncodedAudioChunkMetadata): Promise<void>;
-    abstract addSubtitleCue(track: OutputSubtitleTrack, cue: SubtitleCue, meta?: SubtitleMetadata): Promise<void>;
-    abstract finalize(): Promise<void>;
-    onTrackClose(track: OutputTrack): void;
-    private trackTimestampInfo;
-    protected validateTimestamp(track: OutputTrack, timestampInSeconds: number, isKeyPacket: boolean): void;
-}
-
 /**
  * List of known compressed audio codecs, ordered by encoding preference.
  * @group Codecs
@@ -5035,16 +3305,6 @@ export declare const NON_PCM_AUDIO_CODECS: readonly ["aac", "opus", "mp3", "vorb
  * @public
  */
 export declare class NullTarget extends Target {
-    /** @internal */
-    _start(): void;
-    /** @internal */
-    _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    _flush(): Promise<void>;
-    /** @internal */
-    _finalize(): Promise<void>;
-    /** @internal */
-    _close(): Promise<void>;
 }
 
 /**
@@ -5053,77 +3313,6 @@ export declare class NullTarget extends Target {
  * @public
  */
 export declare const OGG: OggInputFormat;
-
-declare class OggAudioTrackBacking implements InputAudioTrackBacking {
-    bitstream: LogicalBitstream;
-    demuxer: OggDemuxer;
-    internalSampleRate: number;
-    encodedPacketToMetadata: WeakMap<EncodedPacket, EncodedPacketMetadata>;
-    sequentialScanCache: EncodedPacketMetadata[];
-    sequentialScanMutex: AsyncMutex;
-    constructor(bitstream: LogicalBitstream, demuxer: OggDemuxer);
-    getType(): "audio";
-    getId(): number;
-    getNumber(): number;
-    getNumberOfChannels(): number;
-    getSampleRate(): number;
-    getTimeResolution(): number;
-    isRelativeToUnixEpoch(): boolean;
-    getUnixTimeForTimestamp(): null;
-    getPairingMask(): bigint;
-    getBitrate(): null;
-    getAverageBitrate(): null;
-    getDurationFromMetadata(): Promise<null>;
-    getLiveRefreshInterval(): Promise<null>;
-    getCodec(): "opus" | "vorbis" | null;
-    getInternalCodecId(): null;
-    getDecoderConfig(): Promise<AudioDecoderConfig | null>;
-    getName(): null;
-    getLanguageCode(): string;
-    getDisposition(): TrackDisposition;
-    granulePositionToTimestampInSamples(granulePosition: number): number;
-    createEncodedPacketFromOggPacket(packet: Packet_2 | null, additional: {
-        timestampInSamples: number;
-        vorbisLastBlocksize: number | null;
-    }, options: PacketRetrievalOptions): EncodedPacket | null;
-    getFirstPacket(options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getNextPacket(prevPacket: EncodedPacket, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getPacket(timestamp: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getPacketSequential(timestamp: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getKeyPacket(timestamp: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getNextKeyPacket(packet: EncodedPacket, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-}
-
-declare type OggCodecInfo = {
-    codec: 'vorbis' | 'opus' | null;
-    vorbisInfo: {
-        blocksizes: number[];
-        modeBlockflags: number[];
-    } | null;
-    opusInfo: {
-        preSkip: number;
-    } | null;
-};
-
-declare class OggDemuxer extends Demuxer {
-    reader: Reader;
-    metadataPromise: Promise<void> | null;
-    bitstreams: LogicalBitstream[];
-    trackBackings: OggAudioTrackBacking[];
-    metadataTags: MetadataTags;
-    constructor(input: Input);
-    readMetadata(): Promise<void>;
-    readVorbisMetadata(firstPacket: Packet_2, bitstream: LogicalBitstream): Promise<void>;
-    readOpusMetadata(firstPacket: Packet_2, bitstream: LogicalBitstream): Promise<void>;
-    readPacket(startPage: Page, startSegmentIndex: number): Promise<Packet_2 | null>;
-    findNextPacketStart(lastPacket: Packet_2): Promise<{
-        startPage: Page;
-        startSegmentIndex: number;
-    } | null>;
-    getMimeType(): Promise<string>;
-    getTrackBackings(): Promise<OggAudioTrackBacking[]>;
-    getMetadataTags(): Promise<MetadataTags>;
-}
 
 /**
  * Ogg file format.
@@ -5134,36 +3323,8 @@ declare class OggDemuxer extends Demuxer {
  * @public
  */
 export declare class OggInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): OggDemuxer;
     get name(): string;
     get mimeType(): string;
-}
-
-declare class OggMuxer extends Muxer {
-    private format;
-    private writer;
-    private trackDatas;
-    private bosPagesWritten;
-    private allTracksKnown;
-    private pageBytes;
-    private pageView;
-    constructor(output: Output, format: OggOutputFormat);
-    start(): Promise<void>;
-    getMimeType(): Promise<string>;
-    addEncodedVideoPacket(): never;
-    private getTrackData;
-    private queueHeaderPackets;
-    addEncodedAudioPacket(track: OutputAudioTrack, packet: EncodedPacket, meta?: EncodedAudioChunkMetadata): Promise<void>;
-    addSubtitleCue(): never;
-    allTracksAreKnown(): boolean;
-    interleavePages(isFinalCall?: boolean): Promise<void>;
-    writePacket(trackData: OggTrackData, packet: Packet, isFinalPacket: boolean): void;
-    writePage(trackData: OggTrackData, isEos: boolean): void;
-    onTrackClose(track: OutputTrack): Promise<void>;
-    finalize(): Promise<void>;
 }
 
 /**
@@ -5172,14 +3333,8 @@ declare class OggMuxer extends Muxer {
  * @public
  */
 export declare class OggOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: OggOutputFormatOptions;
     /** Creates a new {@link OggOutputFormat} configured with the specified `options`. */
     constructor(options?: OggOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): OggMuxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -5209,24 +3364,6 @@ export declare type OggOutputFormatOptions = {
     onPage?: (data: Uint8Array, position: number, source: MediaSource_2) => unknown;
 };
 
-declare type OggTrackData = {
-    track: OutputAudioTrack;
-    serialNumber: number;
-    internalSampleRate: number;
-    codecInfo: OggCodecInfo;
-    vorbisLastBlocksize: number | null;
-    packetQueue: Packet[];
-    currentTimestampInSamples: number;
-    pagesWritten: number;
-    currentGranulePosition: number;
-    currentLacingValues: number[];
-    currentPageData: Uint8Array[];
-    currentPageSize: number;
-    currentPageStartsWithFreshPacket: boolean;
-    currentPageStartTimestampInSamples: number;
-    closed: boolean;
-};
-
 /**
  * Main class orchestrating the creation of new media files.
  * @group Output files
@@ -5235,8 +3372,6 @@ declare type OggTrackData = {
 export declare class Output<F extends OutputFormat = OutputFormat, T extends Target = Target> extends EventEmitter<OutputEvents> {
     /** The format of the output file. */
     readonly format: F;
-    /** @internal */
-    _target: T | PathedTarget<T>;
     /** The current state of the output. */
     state: 'pending' | 'started' | 'canceled' | 'finalizing' | 'finalized';
     /**
@@ -5244,39 +3379,6 @@ export declare class Output<F extends OutputFormat = OutputFormat, T extends Tar
      * {@link BaseTrackMetadata.group}.
      */
     readonly defaultTrackGroup: OutputTrackGroup;
-    /** @internal */
-    private _initTarget;
-    /** @internal */
-    _onFinalize: (() => MaybePromise<unknown>) | null;
-    /** @internal */
-    _muxer: Muxer;
-    /** @internal */
-    _unfinalizedTargets: Set<Target>;
-    /** @internal */
-    _rootWriterPromise: Promise<Writer> | null;
-    /** @internal */
-    _tracks: OutputTrack[];
-    /** @internal */
-    _startPromise: Promise<void> | null;
-    /** @internal */
-    _cancelPromise: Promise<void> | null;
-    /** @internal */
-    _finalizePromise: Promise<void> | null;
-    /** @internal */
-    _mutex: AsyncMutex;
-    /** @internal */
-    _metadataTags: MetadataTags;
-    /** @internal */
-    _rootTarget: T | null;
-    /** @internal */
-    _rootTargetPromise: Promise<T> | null;
-    /**
-     * This field is used to synchronize multiple MediaStreamTracks. They use the same time coordinate system across
-     * tracks, and to ensure correct audio-video sync, we must use the same offset for all of them. The reason an offset
-     * is needed at all is because the timestamps typically don't start at zero.
-     * @internal
-     */
-    _firstMediaStreamTimestamp: number | null;
     /**
      * The target to which the root file will be written. Throws when using {@link PathedTarget} with an async callback;
      * prefer the `'target'` event for those cases.
@@ -5287,20 +3389,6 @@ export declare class Output<F extends OutputFormat = OutputFormat, T extends Tar
      * specified {@link OutputOptions}.
      */
     constructor(options: OutputOptions<F, T>);
-    /** @internal */
-    _getTargetValidated(request: TargetRequest): MaybePromise<T>;
-    /** @internal */
-    _getTarget(request: TargetRequest): Promise<T>;
-    /** @internal */
-    _rememberTarget(target: Target): void;
-    /** @internal */
-    _getInitTarget(): Promise<T>;
-    /** @internal */
-    _hasInitTarget(): boolean;
-    /** @internal */
-    _getRootTarget(): MaybePromise<T>;
-    /** @internal */
-    _getRootWriter(isMonotonic: boolean | ((target: Target) => boolean)): Promise<Writer>;
     /** Adds a video track to the output with the given source. Can only be called before the output is started. */
     addVideoTrack(source: VideoSource, metadata?: VideoTrackMetadata): OutputVideoTrack;
     /** Adds an audio track to the output with the given source. Can only be called before the output is started. */
@@ -5314,8 +3402,6 @@ export declare class Output<F extends OutputFormat = OutputFormat, T extends Tar
      * Can only be called before the output is started.
      */
     setMetadataTags(tags: MetadataTags): void;
-    /** @internal */
-    private _addTrack;
     /**
      * Starts the creation of the output file. This method should be called after all tracks have been added. Only after
      * the output has started can media samples be added to the tracks.
@@ -5352,8 +3438,6 @@ export declare class OutputAudioTrack extends OutputTrack {
     readonly type: 'audio';
     readonly source: AudioSource;
     readonly metadata: AudioTrackMetadata;
-    /** @internal */
-    constructor(id: number, output: Output, source: AudioSource, metadata: AudioTrackMetadata);
 }
 
 /**
@@ -5381,10 +3465,6 @@ export declare type OutputEvents = {
  * @public
  */
 export declare abstract class OutputFormat {
-    /** @internal */
-    abstract _createMuxer(output: Output): Muxer;
-    /** @internal */
-    abstract get _name(): string;
     /** The file extension used by this output format, beginning with a dot. */
     abstract get fileExtension(): string;
     /** The base MIME type of the output format. */
@@ -5408,8 +3488,6 @@ export declare abstract class OutputFormat {
     getSupportedAudioCodecs(): AudioCodec[];
     /** Returns a list of subtitle codecs that this output format can contain. */
     getSupportedSubtitleCodecs(): SubtitleCodec[];
-    /** @internal */
-    _codecUnsupportedHint(codec: MediaCodec): string;
 }
 
 /**
@@ -5445,8 +3523,6 @@ export declare class OutputSubtitleTrack extends OutputTrack {
     readonly type: 'subtitle';
     readonly source: SubtitleSource;
     readonly metadata: SubtitleTrackMetadata;
-    /** @internal */
-    constructor(id: number, output: Output, source: SubtitleSource, metadata: SubtitleTrackMetadata);
 }
 
 /**
@@ -5455,8 +3531,6 @@ export declare class OutputSubtitleTrack extends OutputTrack {
  * @public
  */
 export declare abstract class OutputTrack {
-    /** @internal */
-    readonly id: number;
     /** The {@link Output} this track belongs to. */
     readonly output: Output;
     /** The type of this track. */
@@ -5465,8 +3539,6 @@ export declare abstract class OutputTrack {
     readonly source: MediaSource_2;
     /** The metadata associated with this track. */
     readonly metadata: BaseTrackMetadata;
-    /** @internal */
-    protected constructor(id: number, output: Output, type: TrackType, source: MediaSource_2, metadata: BaseTrackMetadata);
     /** Returns true if and only if this track is a video track. */
     isVideoTrack(): this is OutputVideoTrack;
     /** Returns true if and only if this track is an audio track. */
@@ -5492,8 +3564,6 @@ export declare abstract class OutputTrack {
  * @public
  */
 export declare class OutputTrackGroup {
-    /** @internal */
-    _pairedGroups: Set<OutputTrackGroup>;
     /** Creates a new {@link OutputTrackGroup}. */
     constructor();
     /**
@@ -5514,22 +3584,7 @@ export declare class OutputVideoTrack extends OutputTrack {
     readonly type: 'video';
     readonly source: VideoSource;
     readonly metadata: VideoTrackMetadata;
-    /** @internal */
-    constructor(id: number, output: Output, source: VideoSource, metadata: VideoTrackMetadata);
 }
-
-declare type Packet = {
-    data: Uint8Array;
-    timestampInSamples: number;
-    durationInSamples: number;
-    forcePageFlush: boolean;
-};
-
-declare type Packet_2 = {
-    data: Uint8Array;
-    endPage: Page;
-    endSegmentIndex: number;
-};
 
 /**
  * Additional options for controlling packet retrieval.
@@ -5585,19 +3640,6 @@ export declare type PacketStats = {
  */
 export declare type PacketType = 'key' | 'delta';
 
-declare type Page = {
-    headerStartPos: number;
-    totalSize: number;
-    dataStartPos: number;
-    dataSize: number;
-    headerType: number;
-    granulePosition: number;
-    serialNumber: number;
-    sequenceNumber: number;
-    checksum: number;
-    lacingValues: Uint8Array;
-};
-
 /**
  * A source which can create new sources from file paths. Required for multi-file inputs such as HLS playlists.
  * @public
@@ -5623,8 +3665,6 @@ export declare abstract class PathedSource extends Source {
     rootPath: FilePath, 
     /** The callback that is called for each requested file; must return a {@link Source} or {@link SourceRef}. */
     requestHandler: (request: SourceRequest) => MaybePromise<Source | SourceRef>);
-    /** @internal */
-    _resolveRequest(request: SourceRequest): MaybePromise<SourceRef>;
 }
 
 /**
@@ -5652,39 +3692,6 @@ export declare class PathedTarget<T extends Target> {
  */
 export declare const PCM_AUDIO_CODECS: readonly ["pcm-s16", "pcm-s16be", "pcm-s24", "pcm-s24be", "pcm-s32", "pcm-s32be", "pcm-f32", "pcm-f32be", "pcm-f64", "pcm-f64be", "pcm-u8", "pcm-s8", "ulaw", "alaw"];
 
-declare type PcmAudioCodec = typeof PCM_AUDIO_CODECS[number];
-
-declare class PcmAudioDecoderWrapper extends DecoderWrapper<AudioSample> {
-    decoderConfig: AudioDecoderConfig;
-    codec: PcmAudioCodec;
-    inputSampleSize: 1 | 2 | 3 | 4 | 8;
-    readInputValue: (view: DataView, byteOffset: number) => number;
-    outputSampleSize: 1 | 2 | 4;
-    outputFormat: 'u8' | 's16' | 's32' | 'f32';
-    writeOutputValue: (view: DataView, byteOffset: number, value: number) => void;
-    currentTimestamp: number | null;
-    constructor(onSample: (sample: AudioSample) => unknown, onError: (error: Error) => unknown, decoderConfig: AudioDecoderConfig);
-    getDecodeQueueSize(): number;
-    decode(packet: EncodedPacket): void;
-    flush(): Promise<void>;
-    close(): void;
-}
-
-declare type PendingSlice = {
-    start: number;
-    bytes: Uint8Array;
-    holes: Hole[];
-    resolve: (bytes: Uint8Array | null) => void;
-    reject: (error: unknown) => void;
-};
-
-declare type PesPacketHeader = {
-    sectionStartPos: number;
-    sectionEndPos: number | null;
-    pts: number | null;
-    randomAccessIndicator: number;
-};
-
 /**
  * Helper function for use in {@link InputTrackQuery.sortBy}, used to sort tracks by boolean properties. `true` is
  * sorted to the start, `false` to the end. Useful for expressing soft preferences (e.g., "I'd prefer 1080p, but other
@@ -5695,11 +3702,6 @@ declare type PesPacketHeader = {
  * @public
  */
 export declare const prefer: (value: boolean) => number;
-
-declare type PrefetchProfile = (start: number, end: number, workers: ReadWorker[]) => {
-    start: number;
-    end: number;
-};
 
 /**
  * Represents a Protection System Specific Header box as used by ISOBMFF Common Encryption. Contains
@@ -5732,14 +3734,6 @@ export declare const QTFF: QuickTimeInputFormat;
  * @public
  */
 export declare class Quality {
-    /** @internal */
-    _factor: number;
-    /** @internal */
-    constructor(factor: number);
-    /** @internal */
-    _toVideoBitrate(codec: VideoCodec, width: number, height: number): number;
-    /** @internal */
-    _toAudioBitrate(codec: AudioCodec): number | undefined;
 }
 
 /**
@@ -5786,8 +3780,6 @@ export declare const QUALITY_VERY_LOW: Quality;
  * @public
  */
 export declare class QuickTimeInputFormat extends IsobmffInputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
     get name(): string;
     get mimeType(): string;
 }
@@ -5800,22 +3792,6 @@ export declare class QuickTimeInputFormat extends IsobmffInputFormat {
  * @public
  */
 export declare class RangedSource extends Source {
-    /** @internal */
-    _baseSource: Source;
-    /** @internal */
-    _ref: SourceRef | null;
-    /** @internal */
-    _offset: number;
-    /** @internal */
-    _length: number | null;
-    /** @internal */
-    constructor(baseSource: Source, offset: number, length?: number);
-    /** @internal */
-    _getFileSize(): number | null | undefined;
-    /** @internal */
-    _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    _dispose(): void;
     ref(): SourceRef<this>;
 }
 
@@ -5826,24 +3802,6 @@ export declare class RangedSource extends Source {
  * @public
  */
 export declare class RangedTarget extends Target {
-    /** @internal */
-    _baseTarget: Target;
-    /** @internal */
-    _offset: number;
-    /** @internal */
-    constructor(baseTarget: Target, offset: number);
-    /** @internal */
-    _start(): void;
-    /** @internal */
-    _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    _flush(): Promise<void>;
-    /** @internal */
-    _finalize(): Promise<void>;
-    /** @internal */
-    _close(): Promise<void>;
-    /** @internal */
-    _setMonotonicity(monotonicity: boolean): void;
 }
 
 /**
@@ -5873,38 +3831,8 @@ export declare type Rational = {
  * @public
  */
 export declare class ReadableStreamSource extends Source {
-    /** @internal */
-    _stream: ReadableStream<Uint8Array>;
-    /** @internal */
-    _reader: ReadableStreamDefaultReader<Uint8Array> | null;
-    /** @internal */
-    _cache: CacheEntry[];
-    /** @internal */
-    _maxCacheSize: number;
-    /** @internal */
-    _pendingSlices: ReadableStreamSourcePendingSlice[];
-    /** @internal */
-    _currentIndex: number;
-    /** @internal */
-    _targetIndex: number;
-    /** @internal */
-    _maxRequestedIndex: number;
-    /** @internal */
-    _endIndex: number | null;
-    /** @internal */
-    _pulling: boolean;
     /** Creates a new {@link ReadableStreamSource} backed by the specified `ReadableStream<Uint8Array>`. */
     constructor(stream: ReadableStream<Uint8Array>, options?: ReadableStreamSourceOptions);
-    /** @internal */
-    _getFileSize(): number | null;
-    /** @internal */
-    _read(start: number, end: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    _throwDueToCacheMiss(): void;
-    /** @internal */
-    _pull(): Promise<void>;
-    /** @internal */
-    _dispose(): void;
 }
 
 /**
@@ -5915,92 +3843,6 @@ export declare class ReadableStreamSource extends Source {
 export declare type ReadableStreamSourceOptions = {
     /** The maximum number of bytes the cache is allowed to hold in memory. Defaults to 32 MiB. */
     maxCacheSize?: number;
-};
-
-declare type ReadableStreamSourcePendingSlice = {
-    start: number;
-    end: number;
-    bytes: Uint8Array;
-    resolve: (bytes: ReadResult | null) => void;
-    reject: (error: unknown) => void;
-};
-
-declare class Reader {
-    source: Source;
-    constructor(source: Source);
-    get fileSize(): number | null;
-    get fileSizeNonStrict(): number | null;
-    requestSlice(start: number, length: number): MaybePromise<FileSlice | null>;
-    requestSliceRange(start: number, minLength: number, maxLength: number): MaybePromise<FileSlice | null>;
-    requestEntireFile(): MaybePromise<FileSlice | null>;
-}
-
-/**
- * Godclass for orchestrating complex, cached read operations. The reading model is as follows: Any reading task is
- * delegated to a *worker*, which is a sequential reader positioned somewhere along the file. All workers run in
- * parallel and can be stopped and resumed in their forward movement. When read requests come in, this orchestrator will
- * first try to satisfy the request with only the cached data. If this isn't possible, workers are spun up for all
- * missing parts (or existing workers are repurposed), and these workers will then fill the holes in the data as they
- * march along the file.
- */
-declare class ReadOrchestrator {
-    options: {
-        maxCacheSize: number;
-        runWorker: (worker: ReadWorker) => Promise<void>;
-        prefetchProfile: PrefetchProfile;
-        maxWorkerCount: number;
-    };
-    fileSize: number | null;
-    nextAge: number;
-    workers: ReadWorker[];
-    cache: CacheEntry[];
-    currentCacheSize: number;
-    disposed: boolean;
-    queuedReads: {
-        hole: Hole;
-        strictTarget: boolean;
-        pendingSlices: PendingSlice[];
-        age: number;
-    }[];
-    constructor(options: {
-        maxCacheSize: number;
-        runWorker: (worker: ReadWorker) => Promise<void>;
-        prefetchProfile: PrefetchProfile;
-        maxWorkerCount: number;
-    });
-    read(innerStart: number, innerEnd: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    checkHoleAgainstWorker(worker: ReadWorker, hole: Hole, pendingSlices: PendingSlice[]): boolean;
-    checkQueuedReadsAgainstWorker(worker: ReadWorker): void;
-    createWorker(startPos: number, targetPos: number, strictTarget: boolean): ReadWorker | null;
-    runWorker(worker: ReadWorker): void;
-    consolidateEverythingIntoOneWorker(worker: ReadWorker): void;
-    /** Called by a worker when it has read some data. */
-    supplyWorkerData(worker: ReadWorker, bytes: Uint8Array): void;
-    supplyFileSize(size: number): void;
-    signalWorkerStoppedRunning(worker: ReadWorker): void;
-    /** Called when a worker reaches the end of the underlying data and must be cleaned up. */
-    onWorkerFinished(worker: ReadWorker): void;
-    insertIntoCache(entry: CacheEntry): void;
-    dispose(): void;
-}
-
-declare type ReadResult = {
-    bytes: Uint8Array;
-    view: DataView;
-    /** The offset of the bytes in the file. */
-    offset: number;
-};
-
-declare type ReadWorker = {
-    startPos: number;
-    currentPos: number;
-    targetPos: number;
-    /** The target is considered _strict_ when it is an error for the worker to terminate before reaching the target. */
-    strictTarget: boolean;
-    running: boolean;
-    aborted: boolean;
-    pendingSlices: PendingSlice[];
-    age: number;
 };
 
 /**
@@ -6069,176 +3911,6 @@ export declare class RichImageData {
  */
 export declare type Rotation = 0 | 90 | 180 | 270;
 
-declare type Sample = {
-    timestamp: number;
-    decodeTimestamp: number;
-    duration: number;
-    data: Uint8Array | null;
-    size: number;
-    type: PacketType;
-    timescaleUnitsToNextSample: number;
-};
-
-declare type Sample_2 = {
-    timestamp: number;
-    duration: number;
-    dataStart: number;
-    dataSize: number;
-};
-
-declare type Sample_3 = {
-    timestamp: number;
-    duration: number;
-    dataStart: number;
-    dataSize: number;
-};
-
-declare type SampleCompositionTimeOffsetEntry = {
-    startIndex: number;
-    count: number;
-    offset: number;
-};
-
-/**
- * Holds parsed saiz+saio state. The encryption info itself lives at a file offset and is fetched lazily.
- * For fragmented files this state is per-traf; for non-fragmented files it's per-track (on stbl).
- */
-declare type SampleEncryptionAuxInfo = {
-    defaultSampleInfoSize: number;
-    sampleSizes: Uint8Array | null;
-    sampleCount: number;
-    offset: number | null;
-    resolved: SampleEncryptionInfo[] | null;
-};
-
-declare type SampleEncryptionInfo = {
-    iv: Uint8Array;
-    subsamples: {
-        clearLen: number;
-        protectedLen: number;
-    }[] | null;
-};
-
-declare type SampleTable = {
-    sampleTimingEntries: SampleTimingEntry[];
-    sampleCompositionTimeOffsets: SampleCompositionTimeOffsetEntry[];
-    sampleSizes: number[];
-    keySampleIndices: number[] | null;
-    chunkOffsets: number[];
-    sampleToChunk: SampleToChunkEntry[];
-    presentationTimestamps: {
-        presentationTimestamp: number;
-        sampleIndex: number;
-    }[] | null;
-    /**
-     * Provides a fast map from sample index to index in the sorted presentation timestamps array - so, a fast map from
-     * decode order to presentation order.
-     */
-    presentationTimestampIndexMap: number[] | null;
-};
-
-declare type SampleTimingEntry = {
-    startIndex: number;
-    startDecodeTimestamp: number;
-    count: number;
-    delta: number;
-};
-
-declare type SampleToChunkEntry = {
-    startSampleIndex: number;
-    startChunkIndex: number;
-    samplesPerChunk: number;
-    sampleDescriptionIndex: number;
-};
-
-declare type Section = {
-    startPos: number;
-    endPos: number | null;
-    pid: number;
-    payload: Uint8Array<ArrayBufferLike>;
-    randomAccessIndicator: number;
-};
-
-declare type SeekEntry = {
-    id: number;
-    segmentPosition: number;
-};
-
-declare type Segment = {
-    timestamp: number;
-    duration: number;
-    /**
-     * The Unix time (in seconds) corresponding to this segment's start timestamp, or null if unknown. This is computed
-     * whenever the source provides wall-clock information (e.g. HLS program date time), even if the segment timestamps
-     * themselves are not shifted into Unix time space.
-     */
-    unixEpochTimestamp: number | null;
-    firstSegment: Segment | null;
-};
-
-declare type Segment_2 = {
-    seekHeadSeen: boolean;
-    infoSeen: boolean;
-    tracksSeen: boolean;
-    cuesSeen: boolean;
-    attachmentsSeen: boolean;
-    tagsSeen: boolean;
-    timestampScale: number;
-    timestampFactor: number;
-    duration: number;
-    seekEntries: SeekEntry[];
-    tracks: InternalTrack_3[];
-    cuePoints: CuePoint[];
-    dataStartPos: number;
-    elementEndPos: number | null;
-    clusterSeekStartPos: number;
-    /**
-     * Caches the last cluster that was read. Based on the assumption that there will be multiple reads to the
-     * same cluster in quick succession.
-     */
-    lastReadCluster: Cluster | null;
-    metadataTags: MetadataTags;
-    metadataTagsCollected: boolean;
-};
-
-declare abstract class SegmentedInput {
-    input: Input;
-    path: string;
-    trackDeclarations: SegmentedInputTrackDeclaration[] | null;
-    nextInputCacheAge: number;
-    inputCache: {
-        segment: Segment;
-        input: Input;
-        age: number;
-    }[];
-    trackBackingsPromise: Promise<InputTrackBacking[]> | null;
-    firstSegment: Segment | null;
-    firstSegmentFirstTimestamps: WeakMap<Segment, number>;
-    firstTimestampCache: WeakMap<Input<Source>, number>;
-    constructor(input: Input, path: string, trackDeclarations: SegmentedInputTrackDeclaration[] | null);
-    abstract getFirstSegment(options: SegmentRetrievalOptions): Promise<Segment | null>;
-    abstract getSegmentAt(timestamp: number, options: SegmentRetrievalOptions): Promise<Segment | null>;
-    abstract getNextSegment(segment: Segment, options: SegmentRetrievalOptions): Promise<Segment | null>;
-    abstract getPreviousSegment(segment: Segment, options: SegmentRetrievalOptions): Promise<Segment | null>;
-    abstract getInputForSegment(segment: Segment): Input;
-    abstract getLiveRefreshInterval(): Promise<number | null>;
-    getDurationFromMetadata(options: DurationMetadataRequestOptions): Promise<number | null>;
-    getUnixTimeForTimestamp(timestamp: number): Promise<number | null>;
-    getTrackBackings(): Promise<InputTrackBacking[]>;
-    getFirstTimestampForInput(input: Input): Promise<number>;
-    getMediaOffset(segment: Segment, input: Input): Promise<number>;
-    dispose(): void;
-}
-
-declare type SegmentedInputTrackDeclaration = {
-    id: number;
-    type: TrackType;
-};
-
-declare type SegmentRetrievalOptions = {
-    skipLiveWait?: boolean;
-};
-
 /**
  * Sets all keys K of T to be optional.
  * @group Miscellaneous
@@ -6259,30 +3931,6 @@ export declare type SetRequired<T, K extends keyof T> = T & Required<Pick<T, K>>
  * @public
  */
 export declare abstract class Source extends EventEmitter<SourceEvents> {
-    /** @internal */
-    abstract _getFileSize(): number | null | undefined;
-    /** @internal */
-    abstract _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    abstract _dispose(): void;
-    /** @internal */
-    _disposed: boolean;
-    /** @internal */
-    _refCount: number;
-    /**
-     * Used internally to mark if a source stems from an HLS reading operation. Used to suppress certain warnings.
-     * @internal
-     */
-    _usedForHls: boolean;
-    /**
-     * FinalizationRegistry for rogue refs to this source that didn't get freed. It lives on the Source itself so that
-     * in case the Source transitively points back to itself and forms a cycle (for example through a custom
-     * CustomSource callback) that we're not leaking memory.
-     * @internal
-     */
-    _refFinalizationRegistry: FinalizationRegistry<Source> | null;
-    /** @internal */
-    private _sizePromise;
     constructor();
     /**
      * Resolves with the total size of the file in bytes. This function is memoized, meaning only the first call
@@ -6311,25 +3959,12 @@ export declare abstract class Source extends EventEmitter<SourceEvents> {
      * @deprecated Use `source.on('read', ({ start, end }) => ...)` instead.
      */
     onread: ((start: number, end: number) => unknown) | null;
-    /** @internal */
-    _dispatchRead(start: number, end: number): void;
     /**
      * Creates a new `SourceRef` pointing to this source. You are expected to call `.free()` on said `SourceRef` when
      * you're done with it.
      */
     ref(): SourceRef<this>;
-    /** @internal */
-    _incrementRefCount(): void;
-    /** @internal */
-    _decrementRefCount(): void;
 }
-
-declare type SourceCacheEntry = {
-    request: SourceRequest;
-    sourceRef: SourceRef;
-    age: number;
-    cacheGroup: number;
-};
 
 /**
  * The events emitted by a {@link Source}, with each key being an event name and its value being the event data.
@@ -6355,12 +3990,6 @@ export declare type SourceEvents = {
  * @public
  */
 export declare class SourceRef<S extends Source = Source> implements Disposable {
-    /** @internal */
-    private _source;
-    /** @internal */
-    private _freed;
-    /** @internal */
-    constructor(source: S);
     /** The {@link Source} this ref references. Accessing this field throws an error after having freed the ref. */
     get source(): S;
     /** Whether or not this reference has been freed via {@link SourceRef.free}. */
@@ -6417,53 +4046,8 @@ export declare type StreamSourceOptions = CustomSourceOptions;
  * @public
  */
 export declare class StreamTarget extends Target {
-    /** @internal */
-    _writable: WritableStream<StreamTargetChunk>;
-    /** @internal */
-    _options: StreamTargetOptions;
-    /** @internal */
-    _sections: {
-        data: Uint8Array;
-        start: number;
-    }[];
-    /** @internal */
-    _lastWriteEnd: number;
-    /** @internal */
-    _lastFlushEnd: number;
-    /** @internal */
-    _streamWriter: WritableStreamDefaultWriter<StreamTargetChunk> | null;
-    /** @internal */
-    _writeError: unknown;
-    /** @internal */
-    _chunked: boolean;
-    /** @internal */
-    _chunkSize: number;
-    /**
-     * The data is divided up into fixed-size chunks, whose contents are first filled in RAM and then flushed out.
-     * A chunk is flushed if all of its contents have been written.
-     */
-    /** @internal */
-    _chunks: Chunk_2[];
     /** Creates a new {@link StreamTarget} which writes to the specified `writable`. */
     constructor(writable: WritableStream<StreamTargetChunk>, options?: StreamTargetOptions);
-    /** @internal */
-    _start(): void;
-    /** @internal */
-    _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    _flush(): Promise<void>;
-    /** @internal */
-    _writeDataIntoChunks(data: Uint8Array, position: number): void;
-    /** @internal */
-    _insertSectionIntoChunk(chunk: Chunk_2, section: ChunkSection): void;
-    /** @internal */
-    _createChunk(includesPosition: number): number;
-    /** @internal */
-    _tryToFlushChunks(force?: boolean): void;
-    /** @internal */
-    _finalize(): Promise<void>;
-    /** @internal */
-    _close(): Promise<void | undefined>;
 }
 
 /**
@@ -6510,33 +4094,12 @@ export declare const SUBTITLE_CODECS: readonly ["webvtt"];
  */
 export declare type SubtitleCodec = typeof SUBTITLE_CODECS[number];
 
-declare type SubtitleConfig = {
-    description: string;
-};
-
-declare type SubtitleCue = {
-    timestamp: number;
-    duration: number;
-    text: string;
-    identifier?: string;
-    settings?: string;
-    notes?: string;
-};
-
-declare type SubtitleMetadata = {
-    config?: SubtitleConfig;
-};
-
 /**
  * Base class for subtitle sources - sources for subtitle tracks.
  * @group Media sources
  * @public
  */
 export declare abstract class SubtitleSource extends MediaSource_2 {
-    /** @internal */
-    _connectedTrack: OutputSubtitleTrack | null;
-    /** @internal */
-    readonly _codec: SubtitleCodec;
     /** Internal constructor. */
     constructor(codec: SubtitleCodec);
 }
@@ -6554,20 +4117,6 @@ export declare type SubtitleTrackMetadata = BaseTrackMetadata & {};
  * @public
  */
 export declare abstract class Target extends EventEmitter<TargetEvents> {
-    /** @internal */
-    _writerAcquired: boolean;
-    /** @internal */
-    _monotonicity: boolean | null;
-    /** @internal */
-    abstract _start(): void;
-    /** @internal */
-    abstract _write(data: Uint8Array, pos: number): void;
-    /** @internal */
-    abstract _flush(): Promise<void>;
-    /** @internal */
-    abstract _finalize(): Promise<void>;
-    /** @internal */
-    abstract _close(): Promise<void>;
     /**
      * Called each time data is written to the target. Will be called with the byte range into which data was written.
      *
@@ -6577,10 +4126,6 @@ export declare abstract class Target extends EventEmitter<TargetEvents> {
      * @deprecated Use `target.on('write', ({ start, end }) => ...)` instead.
      */
     onwrite: ((start: number, end: number) => unknown) | null;
-    /** @internal */
-    _setMonotonicity(monotonicity: boolean): void;
-    /** @internal */
-    _dispatchWrite(start: number, end: number): void;
     /**
      * Returns a new {@link RangedTarget} that writes data to this target using the given offset.
      *
@@ -6626,12 +4171,6 @@ export declare type TargetRequest = {
  * @public
  */
 export declare class TextSubtitleSource extends SubtitleSource {
-    /** @internal */
-    private _parser;
-    /** @internal */
-    private _error;
-    /** @internal */
-    private _lastMuxerPromise;
     /** Creates a new {@link TextSubtitleSource} where added text chunks are in the specified `codec`. */
     constructor(codec: SubtitleCodec);
     /**
@@ -6642,15 +4181,7 @@ export declare class TextSubtitleSource extends SubtitleSource {
      * to respect writer and encoder backpressure.
      */
     add(text: string): Promise<void>;
-    /** @internal */
-    _checkForError(): void;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
-
-declare type TimestampedPesPacketHeader = PesPacketHeader & {
-    pts: number;
-};
 
 /**
  * Specifies the number of tracks (for each track type and in total) that an output format supports.
@@ -6691,51 +4222,12 @@ export declare type TrackDisposition = {
     visuallyImpaired: boolean;
 };
 
-declare type TrackEncryptionInfo = {
-    scheme: 'cenc' | 'cens' | 'cbcs';
-    defaultKid: string | null;
-    defaultIsProtected: boolean | null;
-    defaultPerSampleIvSize: number | null;
-    defaultConstantIv: Uint8Array | null;
-    defaultCryptByteBlock: number | null;
-    defaultSkipByteBlock: number | null;
-};
-
-/**
- * Utility class for synchronizing multiple track packet consumers with one another. We don't want one consumer to get
- * too out-of-sync with the others, as that may lead to a large number of packets that need to be internally buffered
- * before they can be written. Therefore, we use this class to slow down a consumer if it is too far ahead of the
- * slowest consumer.
- */
-declare class TrackSynchronizer {
-    maxTimestamps: Map<number, number>;
-    resolvers: {
-        timestamp: number;
-        resolve: () => void;
-    }[];
-    declareTrack(trackId: number): void;
-    shouldWait(trackId: number, timestamp: number): boolean;
-    wait(timestamp: number): Promise<void>;
-    closeTrack(trackId: number): void;
-    computeMinAndMaybeResolve(): number;
-}
-
 /**
  * Union type of all track types.
  * @group Miscellaneous
  * @public
  */
 export declare type TrackType = typeof ALL_TRACK_TYPES[number];
-
-declare type TsPacket = TsPacketHeader & {
-    body: Uint8Array<ArrayBufferLike>;
-};
-
-declare type TsPacketHeader = {
-    payloadUnitStartIndicator: number;
-    pid: number;
-    adaptationFieldControl: number;
-};
 
 /**
  * Thrown when trying to operate on an input that has an unsupported or unrecognizable format.
@@ -6754,26 +4246,6 @@ export declare class UnsupportedInputFormatError extends Error {
  * @public
  */
 export declare class UrlSource extends PathedSource {
-    /** @internal */
-    _url: string | URL | Request;
-    /** @internal */
-    _getRetryDelay: (previousAttempts: number, error: unknown, url: string | URL | Request) => number | null;
-    /** @internal */
-    _options: UrlSourceOptions;
-    /** @internal */
-    _requestInit: RequestInit;
-    /** @internal */
-    _offset: number;
-    /** @internal */
-    _length: number | null;
-    /** @internal */
-    _orchestrator: ReadOrchestrator;
-    /**
-     * Note that this value being true does NOT mean the file size can't change anymore; it just signals that we have at
-     * least checked if we know the file size or not.
-     * @internal
-     */
-    _fileSizeDetermined: boolean;
     /**
      * Creates a new {@link UrlSource} backed by the resource at the specified URL.
      *
@@ -6781,14 +4253,6 @@ export declare class UrlSource extends PathedSource {
      * ongoing requests, use {@link Input.dispose}.
      */
     constructor(url: string | URL | Request, options?: UrlSourceOptions);
-    /** @internal */
-    _getFileSize(): number | null | undefined;
-    /** @internal */
-    _read(start: number, end: number, minReadPosition: number, maxReadPosition: number): MaybePromise<ReadResult | null>;
-    /** @internal */
-    private _runWorker;
-    /** @internal */
-    _dispose(): void;
 }
 
 /**
@@ -6857,51 +4321,6 @@ export declare type VideoDataPlane = {
     /** The stride of the plane, in bytes. This is the distance in bytes between the start of each row of pixels. */
     stride: number;
 };
-
-declare class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
-    codec: VideoCodec;
-    decoderConfig: VideoDecoderConfig;
-    rotation: Rotation;
-    timeResolution: number;
-    decoder: VideoDecoder | null;
-    customDecoder: CustomVideoDecoder | null;
-    customDecoderCallSerializer: CallSerializer;
-    customDecoderQueueSize: number;
-    inputTimestamps: number[];
-    sampleQueue: VideoSample[];
-    currentPacketIndex: number;
-    raslSkipped: boolean;
-    alphaDecoder: VideoDecoder | null;
-    alphaHadKeyframe: boolean;
-    colorQueue: VideoFrame[];
-    alphaQueue: (VideoFrame | null)[];
-    merger: ColorAlphaMerger | null;
-    decodedAlphaChunkCount: number;
-    alphaDecoderQueueSize: number;
-    /** Each value is the number of decoded alpha chunks at which a null alpha frame should be added. */
-    nullAlphaFrameQueue: number[];
-    currentAlphaPacketIndex: number;
-    alphaRaslSkipped: boolean;
-    frameHandlerSerializer: CallSerializer;
-    constructor(onSample: (sample: VideoSample) => unknown, onError: (error: Error) => unknown, codec: VideoCodec, decoderConfig: VideoDecoderConfig, rotation: Rotation, timeResolution: number);
-    getDecodeQueueSize(): number;
-    decode(packet: EncodedPacket): void;
-    decodeAlphaData(packet: EncodedPacket): void;
-    pushNullAlphaFrame(): void;
-    /**
-     * If we're using HEVC, we need to make sure to skip any RASL slices that follow a non-IDR key frame such as
-     * CRA_NUT. This is because RASL slices cannot be decoded without data before the CRA_NUT. Browsers behave
-     * differently here: Chromium drops the packets, Safari throws a decoder error. Either way, it's not good
-     * and causes bugs upstream. So, let's take the dropping into our own hands.
-     */
-    hasHevcRaslPicture(packetData: Uint8Array): boolean;
-    /** Handler for the WebCodecs VideoDecoder for ironing out browser differences. */
-    sampleHandler(sample: VideoSample): void;
-    finalizeAndEmitSample(sample: VideoSample): void;
-    mergeAlpha(color: VideoFrame, alpha: VideoFrame | null): Promise<void>;
-    flush(): Promise<void>;
-    close(): void;
-}
 
 /**
  * Additional options that control video encoding.
@@ -7003,15 +4422,6 @@ export declare type VideoEncodingConfig = {
  * @public
  */
 export declare class VideoSample implements Disposable {
-    /** @internal */
-    _data: VideoFrame | OffscreenCanvas | Uint8Array | VideoSampleResource | null;
-    /**
-     * Used for the ArrayBuffer-backed case.
-     * @internal
-     */
-    _layout: PlaneLayout[] | null;
-    /** @internal */
-    _closed: boolean;
     /**
      * The internal pixel format in which the frame is stored. Will be `null` if it's using an arbitrary internal
      * format not representable by `VideoSamplePixelFormat`.
@@ -7149,13 +4559,6 @@ export declare class VideoSample implements Disposable {
          */
         crop?: CropRectangle;
     }): void;
-    /** @internal */
-    _rotateSourceRegion(sx: number, sy: number, sWidth: number, sHeight: number, rotation: number): {
-        sx: number;
-        sy: number;
-        sWidth: number;
-        sHeight: number;
-    };
     /**
      * Converts this video sample to a
      * [`CanvasImageSource`](https://udn.realityripple.com/docs/Web/API/CanvasImageSource) for drawing to a canvas.
@@ -7237,8 +4640,6 @@ export declare type VideoSampleInit = {
     displayHeight?: number | undefined;
     /** The encode options to use when this sample is passed to an encoder. */
     encodeOptions?: DeepReadonly<VideoEncoderEncodeOptions>;
-    /** @internal */
-    _doNotCopy?: boolean;
 };
 
 /**
@@ -7256,10 +4657,6 @@ export declare type VideoSamplePixelFormat = typeof VIDEO_SAMPLE_PIXEL_FORMATS[n
  * @public
  */
 export declare abstract class VideoSampleResource {
-    /** @internal */
-    _referenceCount: number;
-    /** @internal */
-    _lastAllocationBuffer: ArrayBuffer | null;
     /**
      * Returns the internal pixel format in which the frame is stored.
      * [See pixel formats](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/format)
@@ -7299,16 +4696,8 @@ export declare abstract class VideoSampleResource {
  * @public
  */
 export declare class VideoSampleSink extends BaseMediaSampleSink<VideoSample> {
-    /** @internal */
-    _track: InputVideoTrack;
-    /** @internal */
-    _decoderOptions: VideoSinkDecoderOptions;
     /** Creates a new {@link VideoSampleSink} for the given {@link InputVideoTrack}. */
     constructor(videoTrack: InputVideoTrack, decoderOptions?: VideoSinkDecoderOptions);
-    /** @internal */
-    _createDecoder(onSample: (sample: VideoSample) => unknown, onError: (error: Error) => unknown): Promise<VideoDecoderWrapper>;
-    /** @internal */
-    _createPacketSink(): EncodedPacketSink;
     /**
      * Retrieves the video sample (frame) corresponding to the given timestamp, in seconds. More specifically, returns
      * the last video sample (in presentation order) with a start timestamp less than or equal to the given timestamp.
@@ -7349,8 +4738,6 @@ export declare class VideoSampleSink extends BaseMediaSampleSink<VideoSample> {
  * @public
  */
 export declare class VideoSampleSource extends VideoSource {
-    /** @internal */
-    private _encoder;
     /**
      * Creates a new {@link VideoSampleSource} whose samples are encoded according to the specified
      * {@link VideoEncodingConfig}.
@@ -7363,8 +4750,6 @@ export declare class VideoSampleSource extends VideoSource {
      * to respect writer and encoder backpressure.
      */
     add(videoSample: VideoSample, encodeOptions?: VideoEncoderEncodeOptions): Promise<void>;
-    /** @internal */
-    _flushAndClose(forceClose: boolean): Promise<void>;
 }
 
 /**
@@ -7477,10 +4862,6 @@ export declare type VideoSinkDecoderOptions = {
  * @public
  */
 export declare abstract class VideoSource extends MediaSource_2 {
-    /** @internal */
-    _connectedTrack: OutputVideoTrack | null;
-    /** @internal */
-    readonly _codec: VideoCodec;
     /** Internal constructor. */
     constructor(codec: VideoCodec);
 }
@@ -7568,87 +4949,12 @@ export declare type VideoTransformOptions = {
     force?: boolean;
 };
 
-declare type Vp9CodecInfo = {
-    profile: number;
-    level: number;
-    bitDepth: number;
-    chromaSubsampling: number;
-    videoFullRangeFlag: number;
-    colourPrimaries: number;
-    transferCharacteristics: number;
-    matrixCoefficients: number;
-};
-
 /**
  * WAVE input format singleton.
  * @group Input formats
  * @public
  */
 export declare const WAVE: WaveInputFormat;
-
-declare class WaveAudioTrackBacking implements InputAudioTrackBacking {
-    demuxer: WaveDemuxer;
-    constructor(demuxer: WaveDemuxer);
-    getType(): "audio";
-    getId(): number;
-    getNumber(): number;
-    getCodec(): "aac" | "opus" | "mp3" | "vorbis" | "flac" | "ac3" | "eac3" | "pcm-s16" | "pcm-s16be" | "pcm-s24" | "pcm-s24be" | "pcm-s32" | "pcm-s32be" | "pcm-f32" | "pcm-f32be" | "pcm-f64" | "pcm-f64be" | "pcm-u8" | "pcm-s8" | "ulaw" | "alaw" | null;
-    getInternalCodecId(): number;
-    getDecoderConfig(): Promise<AudioDecoderConfig | null>;
-    getNumberOfChannels(): number;
-    getSampleRate(): number;
-    getTimeResolution(): number;
-    isRelativeToUnixEpoch(): boolean;
-    getUnixTimeForTimestamp(): null;
-    getPairingMask(): bigint;
-    getBitrate(): null;
-    getAverageBitrate(): null;
-    getDurationFromMetadata(): Promise<number>;
-    getLiveRefreshInterval(): Promise<null>;
-    getName(): null;
-    getLanguageCode(): string;
-    getDisposition(): {
-        default: boolean;
-        primary: boolean;
-        forced: boolean;
-        original: boolean;
-        commentary: boolean;
-        hearingImpaired: boolean;
-        visuallyImpaired: boolean;
-    };
-    private getPacketAtIndex;
-    getFirstPacket(options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getPacket(timestamp: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getNextPacket(packet: EncodedPacket, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getKeyPacket(timestamp: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-    getNextKeyPacket(packet: EncodedPacket, options: PacketRetrievalOptions): Promise<EncodedPacket | null>;
-}
-
-declare class WaveDemuxer extends Demuxer {
-    reader: Reader;
-    metadataPromise: Promise<void> | null;
-    dataStart: number;
-    dataSize: number;
-    audioInfo: {
-        format: number;
-        numberOfChannels: number;
-        sampleRate: number;
-        sampleSizeInBytes: number;
-        blockSizeInBytes: number;
-    } | null;
-    trackBackings: WaveAudioTrackBacking[];
-    lastKnownPacketIndex: number;
-    metadataTags: MetadataTags;
-    constructor(input: Input);
-    readMetadata(): Promise<void>;
-    private parseFmtChunk;
-    private parseListChunk;
-    private parseId3Chunk;
-    getCodec(): AudioCodec | null;
-    getMimeType(): Promise<string>;
-    getTrackBackings(): Promise<WaveAudioTrackBacking[]>;
-    getMetadataTags(): Promise<MetadataTags>;
-}
 
 /**
  * WAVE file format, based on RIFF.
@@ -7659,38 +4965,8 @@ declare class WaveDemuxer extends Demuxer {
  * @public
  */
 export declare class WaveInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): WaveDemuxer;
     get name(): string;
     get mimeType(): string;
-}
-
-declare class WaveMuxer extends Muxer {
-    private format;
-    private isRf64;
-    private writer;
-    private riffWriter;
-    private headerWritten;
-    private dataSize;
-    private sampleRate;
-    private sampleCount;
-    private riffSizePos;
-    private dataSizePos;
-    private ds64RiffSizePos;
-    private ds64DataSizePos;
-    private ds64SampleCountPos;
-    constructor(output: Output, format: WavOutputFormat);
-    start(): Promise<void>;
-    getMimeType(): Promise<string>;
-    addEncodedVideoPacket(): Promise<void>;
-    addEncodedAudioPacket(track: OutputAudioTrack, packet: EncodedPacket, meta?: EncodedAudioChunkMetadata): Promise<void>;
-    addSubtitleCue(): Promise<void>;
-    private writeHeader;
-    private writeInfoChunk;
-    private writeId3Chunk;
-    finalize(): Promise<void>;
 }
 
 /**
@@ -7699,14 +4975,8 @@ declare class WaveMuxer extends Muxer {
  * @public
  */
 export declare class WavOutputFormat extends OutputFormat {
-    /** @internal */
-    _options: WavOutputFormatOptions;
     /** Creates a new {@link WavOutputFormat} configured with the specified `options`. */
     constructor(options?: WavOutputFormatOptions);
-    /** @internal */
-    _createMuxer(output: Output): WaveMuxer;
-    /** @internal */
-    get _name(): string;
     getSupportedTrackCounts(): TrackCountLimits;
     get fileExtension(): string;
     get mimeType(): string;
@@ -7758,8 +5028,6 @@ export declare const WEBM: WebMInputFormat;
  * @public
  */
 export declare class WebMInputFormat extends MatroskaInputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
     get name(): string;
     get mimeType(): string;
 }
@@ -7777,12 +5045,8 @@ export declare class WebMOutputFormat extends MkvOutputFormat {
     /** Creates a new {@link WebMOutputFormat} configured with the specified `options`. */
     constructor(options?: MkvOutputFormatOptions);
     getSupportedCodecs(): MediaCodec[];
-    /** @internal */
-    get _name(): string;
     get fileExtension(): string;
     get mimeType(): string;
-    /** @internal */
-    _codecUnsupportedHint(codec: MediaCodec): "" | " Switching to MKV will grant support for this codec.";
 }
 
 /**
@@ -7820,33 +5084,5 @@ export declare type WrappedCanvas = {
     duration: number;
 };
 
-declare class Writer {
-    target: Target;
-    finalized: boolean;
-    started: boolean;
-    private pos;
-    constructor(target: Target, isMonotonic: boolean);
-    start(): void;
-    /** Writes the given data to the target, at the current position. */
-    write(data: Uint8Array): void;
-    /** Sets the current position for future writes to a new one. */
-    seek(newPos: number): void;
-    /** Returns the current position. */
-    getPos(): number;
-    /** Signals to the writer that it may be time to flush. */
-    flush(): Promise<void>;
-    /** Called after muxing has finished. */
-    finalize(): Promise<void>;
-    private trackedWrites;
-    private trackedStart;
-    private trackedEnd;
-    private maybeTrackWrites;
-    startTrackingWrites(): void;
-    stopTrackingWrites(): {
-        data: Uint8Array<ArrayBufferLike>;
-        start: number;
-        end: number;
-    };
-}
-
 export { }
+export as namespace Mediabunny;

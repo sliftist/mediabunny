@@ -5,11 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Muxer } from '../muxer';
-import { Output, OutputAudioTrack } from '../output';
-import { FlacOutputFormat } from '../output-format';
-import { EncodedPacket } from '../packet';
-import { AttachedImage } from '../metadata';
+import { Muxer } from '../muxer.js';
+import { Output, OutputAudioTrack } from '../output.js';
+import { FlacOutputFormat } from '../output-format.js';
+import { EncodedPacket } from '../packet.js';
+import { AttachedImage } from '../metadata.js';
 export declare class FlacMuxer extends Muxer {
     private writer;
     private metadataWritten;

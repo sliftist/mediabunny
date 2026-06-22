@@ -5,13 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AacCodecInfo, AudioCodec, VideoCodec } from '../codec';
-import { Demuxer } from '../demuxer';
-import { Input } from '../input';
-import { InputTrackBacking } from '../input-track';
-import { MetadataTags, TrackDisposition } from '../metadata';
-import { Rotation } from '../misc';
-import { FileSlice, Reader } from '../reader';
+import { AacCodecInfo, AudioCodec, VideoCodec } from '../codec.js';
+import { Demuxer } from '../demuxer.js';
+import { Input } from '../input.js';
+import { InputTrackBacking } from '../input-track.js';
+import { MetadataTags, TrackDisposition } from '../metadata.js';
+import { Rotation } from '../misc.js';
+import { FileSlice, Reader } from '../reader.js';
 type Segment = {
     seekHeadSeen: boolean;
     infoSeen: boolean;

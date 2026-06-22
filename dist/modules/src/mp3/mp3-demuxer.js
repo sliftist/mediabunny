@@ -5,14 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Demuxer } from '../demuxer';
-import { DEFAULT_TRACK_DISPOSITION } from '../metadata';
-import { assert, AsyncMutex, binarySearchExact, binarySearchLessOrEqual, toDataView, UNDETERMINED_LANGUAGE, } from '../misc';
-import { EncodedPacket, PLACEHOLDER_DATA } from '../packet';
-import { getXingOffset, INFO, XING, XingFlags, computeAverageMp3FrameSize, getMp3ChannelCount, } from '../../shared/mp3-misc';
-import { ID3_V1_TAG_SIZE, ID3_V2_HEADER_SIZE, parseId3V1Tag, parseId3V2Tag, readId3V2Header, } from '../id3';
-import { readNextMp3FrameHeader } from './mp3-reader';
-import { readAscii, readBytes, readU32Be } from '../reader';
+import { Demuxer } from '../demuxer.js';
+import { DEFAULT_TRACK_DISPOSITION } from '../metadata.js';
+import { assert, AsyncMutex, binarySearchExact, binarySearchLessOrEqual, toDataView, UNDETERMINED_LANGUAGE, } from '../misc.js';
+import { EncodedPacket, PLACEHOLDER_DATA } from '../packet.js';
+import { getXingOffset, INFO, XING, XingFlags, computeAverageMp3FrameSize, getMp3ChannelCount, } from '../../shared/mp3-misc.js';
+import { ID3_V1_TAG_SIZE, ID3_V2_HEADER_SIZE, parseId3V1Tag, parseId3V2Tag, readId3V2Header, } from '../id3.js';
+import { readNextMp3FrameHeader } from './mp3-reader.js';
+import { readAscii, readBytes, readU32Be } from '../reader.js';
 export class Mp3Demuxer extends Demuxer {
     constructor(input) {
         super(input);

@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { EventEmitter } from './misc';
+import { EventEmitter } from './misc.js';
 /**
  * Controls how much information Mediabunny prints to the console. Higher levels include all lower levels.
  *

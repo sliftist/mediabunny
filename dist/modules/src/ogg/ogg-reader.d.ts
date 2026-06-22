@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { FileSlice } from '../reader';
+import { FileSlice } from '../reader.js';
 export declare const MIN_PAGE_HEADER_SIZE = 27;
 export declare const MAX_PAGE_HEADER_SIZE: number;
 export declare const MAX_PAGE_SIZE: number;

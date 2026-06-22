@@ -5,13 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AudioCodec, VideoCodec } from '../codec';
-import { Demuxer } from '../demuxer';
-import { Input } from '../input';
-import { InputTrackBacking } from '../input-track';
-import { PacketRetrievalOptions } from '../media-sink';
-import { MetadataTags } from '../metadata';
-import { Reader } from '../reader';
+import { AudioCodec, VideoCodec } from '../codec.js';
+import { Demuxer } from '../demuxer.js';
+import { Input } from '../input.js';
+import { InputTrackBacking } from '../input-track.js';
+import { PacketRetrievalOptions } from '../media-sink.js';
+import { MetadataTags } from '../metadata.js';
+import { Reader } from '../reader.js';
 type AviStream = {
     index: number;
     type: 'video' | 'audio' | 'other';
@@ -55,6 +55,7 @@ export declare class AviDemuxer extends Demuxer {
     private parseIdx1;
     private scanMovi;
     private assignTimestamps;
+    private assignMp3Timestamps;
     private buildTrackBackings;
     videoCodecFor(stream: AviStream): VideoCodec | null;
     audioCodecFor(stream: AviStream): AudioCodec | null;

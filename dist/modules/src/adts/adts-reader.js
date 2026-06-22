@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Bitstream } from '../../shared/bitstream';
-import { readBytes } from '../reader';
+import { Bitstream } from '../../shared/bitstream.js';
+import { readBytes } from '../reader.js';
 export const MIN_ADTS_FRAME_HEADER_SIZE = 7;
 export const MAX_ADTS_FRAME_HEADER_SIZE = 9;
 export const readAdtsFrameHeader = (slice) => {

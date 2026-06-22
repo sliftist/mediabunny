@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { assert } from './misc';
+import { assert } from './misc.js';
 export class Writer {
     constructor(target, isMonotonic) {
         this.finalized = false;

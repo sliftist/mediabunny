@@ -5,38 +5,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Demuxer } from './demuxer';
-import { Input } from './input';
-import { IsobmffDemuxer } from './isobmff/isobmff-demuxer';
-import type { PsshBox } from './isobmff/isobmff-misc';
-import { MatroskaDemuxer } from './matroska/matroska-demuxer';
-import { Mp3Demuxer } from './mp3/mp3-demuxer';
-import { OggDemuxer } from './ogg/ogg-demuxer';
-import { WaveDemuxer } from './wave/wave-demuxer';
-import { AviDemuxer } from './avi/avi-demuxer';
-import { AdtsDemuxer } from './adts/adts-demuxer';
-import { MpegTsDemuxer } from './mpeg-ts/mpeg-ts-demuxer';
-import { HlsDemuxer } from './hls/hls-demuxer';
-import { MaybePromise } from './misc';
+import type { PsshBox } from './isobmff/isobmff-misc.js';
+import { MaybePromise } from './misc.js';
 /**
  * Base class representing an input media file format.
  * @group Input formats
  * @public
  */
 export declare abstract class InputFormat {
-    /** @internal */
-    abstract _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    abstract _createDemuxer(input: Input): Demuxer;
     /** Returns the name of the input format. */
     abstract get name(): string;
     /** Returns the typical base MIME type of the input format. */
     abstract get mimeType(): string;
-    /**
-     * Provided for tree-shakable checking.
-     * @internal
-     */
-    _isIsobmff: boolean;
 }
 /**
  * Format representing files compatible with the ISO base media file format (ISOBMFF), like MP4 or MOV files.
@@ -48,12 +28,6 @@ export declare abstract class InputFormat {
  * @public
  */
 export declare abstract class IsobmffInputFormat extends InputFormat {
-    /** @internal */
-    protected _getMajorBrand(input: Input): Promise<string | null>;
-    /** @internal */
-    _createDemuxer(input: Input): IsobmffDemuxer;
-    /** @internal */
-    _isIsobmff: boolean;
 }
 /**
  * MPEG-4 Part 14 (MP4) file format.
@@ -64,8 +38,6 @@ export declare abstract class IsobmffInputFormat extends InputFormat {
  * @public
  */
 export declare class Mp4InputFormat extends IsobmffInputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
     get name(): string;
     get mimeType(): string;
 }
@@ -78,8 +50,6 @@ export declare class Mp4InputFormat extends IsobmffInputFormat {
  * @public
  */
 export declare class QuickTimeInputFormat extends IsobmffInputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
     get name(): string;
     get mimeType(): string;
 }
@@ -92,12 +62,6 @@ export declare class QuickTimeInputFormat extends IsobmffInputFormat {
  * @public
  */
 export declare class MatroskaInputFormat extends InputFormat {
-    /** @internal */
-    protected isSupportedEBMLOfDocType(input: Input, desiredDocType: string): Promise<boolean>;
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): MatroskaDemuxer;
     get name(): string;
     get mimeType(): string;
 }
@@ -110,8 +74,6 @@ export declare class MatroskaInputFormat extends InputFormat {
  * @public
  */
 export declare class WebMInputFormat extends MatroskaInputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
     get name(): string;
     get mimeType(): string;
 }
@@ -124,10 +86,6 @@ export declare class WebMInputFormat extends MatroskaInputFormat {
  * @public
  */
 export declare class Mp3InputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): Mp3Demuxer;
     get name(): string;
     get mimeType(): string;
 }
@@ -140,10 +98,6 @@ export declare class Mp3InputFormat extends InputFormat {
  * @public
  */
 export declare class WaveInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): WaveDemuxer;
     get name(): string;
     get mimeType(): string;
 }
@@ -156,10 +110,6 @@ export declare class WaveInputFormat extends InputFormat {
  * @public
  */
 export declare class AviInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): AviDemuxer;
     get name(): string;
     get mimeType(): string;
 }
@@ -172,10 +122,6 @@ export declare class AviInputFormat extends InputFormat {
  * @public
  */
 export declare class OggInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): OggDemuxer;
     get name(): string;
     get mimeType(): string;
 }
@@ -188,12 +134,8 @@ export declare class OggInputFormat extends InputFormat {
  * @public
  */
 export declare class FlacInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
     get name(): string;
     get mimeType(): string;
-    /** @internal */
-    _createDemuxer(input: Input): Demuxer;
 }
 /**
  * ADTS file format.
@@ -204,10 +146,6 @@ export declare class FlacInputFormat extends InputFormat {
  * @public
  */
 export declare class AdtsInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): AdtsDemuxer;
     get name(): string;
     get mimeType(): string;
 }
@@ -224,10 +162,6 @@ export declare class AdtsInputFormat extends InputFormat {
  * @public
  */
 export declare class MpegTsInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): MpegTsDemuxer;
     get name(): string;
     get mimeType(): string;
 }
@@ -240,10 +174,6 @@ export declare class MpegTsInputFormat extends InputFormat {
  * @public
  */
 export declare class HlsInputFormat extends InputFormat {
-    /** @internal */
-    _canReadInput(input: Input): Promise<boolean>;
-    /** @internal */
-    _createDemuxer(input: Input): HlsDemuxer;
     get name(): string;
     get mimeType(): string;
 }
@@ -365,8 +295,6 @@ export type IsobmffInputFormatOptions = {
          */
         psshBoxes: PsshBox[];
     }) => MaybePromise<Uint8Array | string>;
-    /** @internal */
-    _suppressPsshParsing?: boolean;
 };
 /**
  * Additional HLS input configuration.

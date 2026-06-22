@@ -5,9 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { MediaCodec } from '../codec';
-import { FileSlice, Reader } from '../reader';
-import { Writer } from '../writer';
+import { MediaCodec } from '../codec.js';
+import { FileSlice, Reader } from '../reader.js';
+import { Writer } from '../writer.js';
 export interface EBMLElement {
     id: number;
     size?: number;
@@ -145,10 +145,10 @@ export declare enum EBMLId {
 export declare const LEVEL_0_EBML_IDS: EBMLId[];
 export declare const LEVEL_1_EBML_IDS: EBMLId[];
 export declare const LEVEL_0_AND_1_EBML_IDS: EBMLId[];
-export declare const measureUnsignedInt: (value: number) => 4 | 1 | 2 | 3 | 5 | 6;
-export declare const measureUnsignedBigInt: (value: bigint) => 8 | 4 | 1 | 2 | 3 | 5 | 6 | 7;
-export declare const measureSignedInt: (value: number) => 4 | 1 | 2 | 3 | 5 | 6;
-export declare const measureVarInt: (value: number) => 4 | 1 | 2 | 3 | 5 | 6;
+export declare const measureUnsignedInt: (value: number) => 1 | 2 | 3 | 5 | 6 | 4;
+export declare const measureUnsignedBigInt: (value: bigint) => 8 | 7 | 1 | 2 | 3 | 5 | 6 | 4;
+export declare const measureSignedInt: (value: number) => 1 | 2 | 3 | 5 | 6 | 4;
+export declare const measureVarInt: (value: number) => 1 | 2 | 3 | 5 | 6 | 4;
 export declare class EBMLWriter {
     private writer;
     helper: Uint8Array<ArrayBuffer>;

@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { RichImageData } from '../metadata';
-import { FileSlice } from '../reader';
+import { RichImageData } from '../metadata.js';
+import { FileSlice } from '../reader.js';
 export declare const MIN_BOX_HEADER_SIZE = 8;
 export declare const MAX_BOX_HEADER_SIZE = 16;
 export declare const readBoxHeader: (slice: FileSlice) => {

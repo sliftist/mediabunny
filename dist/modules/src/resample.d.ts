@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { AudioSample } from './sample';
+import { AudioSample } from './sample.js';
 /**
  * Utility class to handle audio resampling, handling both sample rate resampling as well as channel up/downmixing.
  * The advantage over doing this manually rather than using OfflineAudioContext to do it for us is the artifact-free

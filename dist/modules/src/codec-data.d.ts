@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { VideoCodec } from './codec';
-import { Rational } from './misc';
-import { PacketType } from './packet';
-import { MetadataTags } from './metadata';
+import { VideoCodec } from './codec.js';
+import { Rational } from './misc.js';
+import { PacketType } from './packet.js';
+import { MetadataTags } from './metadata.js';
 export declare enum AvcNalUnitType {
     NON_IDR_SLICE = 1,
     SLICE_DPA = 2,

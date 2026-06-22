@@ -5,15 +5,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { OPUS_SAMPLE_RATE } from '../codec';
-import { parseModesFromVorbisSetupPacket, parseOpusIdentificationHeader, readVorbisComments } from '../codec-data';
-import { Demuxer } from '../demuxer';
-import { DEFAULT_TRACK_DISPOSITION } from '../metadata';
-import { assert, AsyncMutex, binarySearchLessOrEqual, findLast, last, roundIfAlmostInteger, toDataView, UNDETERMINED_LANGUAGE, } from '../misc';
-import { EncodedPacket, PLACEHOLDER_DATA } from '../packet';
-import { readBytes } from '../reader';
-import { buildOggMimeType, computeOggPageCrc, extractSampleMetadata } from './ogg-misc';
-import { findNextPageHeader, MAX_PAGE_HEADER_SIZE, MAX_PAGE_SIZE, MIN_PAGE_HEADER_SIZE, readPageHeader, } from './ogg-reader';
+import { OPUS_SAMPLE_RATE } from '../codec.js';
+import { parseModesFromVorbisSetupPacket, parseOpusIdentificationHeader, readVorbisComments } from '../codec-data.js';
+import { Demuxer } from '../demuxer.js';
+import { DEFAULT_TRACK_DISPOSITION } from '../metadata.js';
+import { assert, AsyncMutex, binarySearchLessOrEqual, findLast, last, roundIfAlmostInteger, toDataView, UNDETERMINED_LANGUAGE, } from '../misc.js';
+import { EncodedPacket, PLACEHOLDER_DATA } from '../packet.js';
+import { readBytes } from '../reader.js';
+import { buildOggMimeType, computeOggPageCrc, extractSampleMetadata } from './ogg-misc.js';
+import { findNextPageHeader, MAX_PAGE_HEADER_SIZE, MAX_PAGE_SIZE, MIN_PAGE_HEADER_SIZE, readPageHeader, } from './ogg-reader.js';
 export class OggDemuxer extends Demuxer {
     constructor(input) {
         super(input);
