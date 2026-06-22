@@ -38,6 +38,7 @@ export const VIDEO_CODECS = [
 	'vp9',
 	'av1',
 	'vp8',
+	'mp4v',
 ] as const;
 /**
  * List of known PCM (uncompressed) audio codecs, ordered by encoding preference.

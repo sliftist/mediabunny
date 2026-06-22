@@ -556,6 +556,7 @@ export class Quality {
 			vp9: 0.6, // Similar to HEVC
 			av1: 0.4, // ~60% more efficient than AVC
 			vp8: 1.2, // Slightly less efficient than AVC
+			mp4v: 1.5, // MPEG-4 Part 2 (demux/decode only; never encoded here)
 		};
 
 		const referencePixels = 1920 * 1080;

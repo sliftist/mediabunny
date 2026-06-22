@@ -213,6 +213,7 @@ export {
 	QuickTimeInputFormat,
 	WaveInputFormat,
 	WebMInputFormat,
+	AviInputFormat,
 	ALL_FORMATS,
 	HLS_FORMATS,
 	ADTS,
@@ -226,6 +227,7 @@ export {
 	QTFF,
 	WAVE,
 	WEBM,
+	AVI,
 } from './input-format';
 export {
 	Input,

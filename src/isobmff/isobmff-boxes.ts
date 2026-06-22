@@ -1780,6 +1780,7 @@ const videoCodecToBoxName = (codec: VideoCodec, fullCodecString: string) => {
 		case 'vp8': return 'vp08';
 		case 'vp9': return 'vp09';
 		case 'av1': return 'av01';
+		case 'mp4v': return 'mp4v';
 	}
 };
 
@@ -1789,6 +1790,7 @@ const VIDEO_CODEC_TO_CONFIGURATION_BOX: Record<VideoCodec, (trackData: IsobmffVi
 	vp8: vpcC,
 	vp9: vpcC,
 	av1: av1C,
+	mp4v: () => null, // MPEG-4 Part 2 muxing into ISOBMFF is not supported (demux/decode only)
 };
 
 const audioCodecToBoxName = (codec: AudioCodec, isQuickTime: boolean): string => {

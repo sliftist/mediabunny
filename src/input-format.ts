@@ -27,6 +27,7 @@ import { ID3_V2_HEADER_SIZE, readId3V2Header } from './id3';
 import { readNextMp3FrameHeader } from './mp3/mp3-reader';
 import { OggDemuxer } from './ogg/ogg-demuxer';
 import { WaveDemuxer } from './wave/wave-demuxer';
+import { AviDemuxer } from './avi/avi-demuxer';
 import { MAX_ADTS_FRAME_HEADER_SIZE, MIN_ADTS_FRAME_HEADER_SIZE, readAdtsFrameHeader } from './adts/adts-reader';
 import { AdtsDemuxer } from './adts/adts-demuxer';
 import { readAscii, readBytes, readU32Be } from './reader';
@@ -405,6 +406,46 @@ export class WaveInputFormat extends InputFormat {
 }
 
 /**
+ * AVI (Audio Video Interleave) file format, based on RIFF.
+ *
+ * Do not instantiate this class; use the {@link AVI} singleton instead.
+ *
+ * @group Input formats
+ * @public
+ */
+export class AviInputFormat extends InputFormat {
+	/** @internal */
+	async _canReadInput(input: Input) {
+		let slice = input._reader.requestSlice(0, 12);
+		if (slice instanceof Promise) slice = await slice;
+		if (!slice) return false;
+
+		const riffType = readAscii(slice, 4);
+		if (riffType !== 'RIFF') {
+			return false;
+		}
+
+		slice.skip(4);
+
+		const format = readAscii(slice, 4);
+		return format === 'AVI ' || format === 'AVIX';
+	}
+
+	/** @internal */
+	_createDemuxer(input: Input) {
+		return new AviDemuxer(input);
+	}
+
+	get name() {
+		return 'AVI';
+	}
+
+	get mimeType() {
+		return 'video/x-msvideo';
+	}
+}
+
+/**
  * Ogg file format.
  *
  * Do not instantiate this class; use the {@link OGG} singleton instead.
@@ -686,6 +727,12 @@ export const MP3 = /* #__PURE__ */ new Mp3InputFormat();
  */
 export const WAVE = /* #__PURE__ */ new WaveInputFormat();
 /**
+ * AVI input format singleton.
+ * @group Input formats
+ * @public
+ */
+export const AVI = /* #__PURE__ */ new AviInputFormat();
+/**
  * Ogg input format singleton.
  * @group Input formats
  * @public
@@ -725,7 +772,7 @@ export const HLS = /* #__PURE__ */ new HlsInputFormat();
  * @group Input formats
  * @public
  */
-export const ALL_FORMATS: InputFormat[] = [HLS, MP4, QTFF, MATROSKA, WEBM, WAVE, OGG, FLAC, MP3, ADTS, MPEG_TS];
+export const ALL_FORMATS: InputFormat[] = [HLS, MP4, QTFF, MATROSKA, WEBM, AVI, WAVE, OGG, FLAC, MP3, ADTS, MPEG_TS];
 
 /**
  * List of input formats required for playback of typical HLS manifests. Includes HLS itself as well as the typical

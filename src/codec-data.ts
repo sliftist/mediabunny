@@ -2456,6 +2456,12 @@ export const determineVideoPacketType = (
 			return null;
 		};
 
+		case 'mp4v': {
+			// MPEG-4 Part 2: key/delta comes from the container index, not
+			// re-derived from the bitstream here.
+			return null;
+		};
+
 		default: {
 			assertNever(codec);
 			assert(false);
