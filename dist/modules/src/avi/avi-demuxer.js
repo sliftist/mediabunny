@@ -18,63 +18,6 @@ const MP4V_FOURCCS = new Set([
     'XVID', 'xvid', 'DIVX', 'divx', 'DX50', 'dx50', 'MP4V', 'mp4v',
     'FMP4', 'fmp4', 'XVIX', '3IV2', 'DXGM', 'MP4S', 'M4S2', 'DM4V',
 ]);
-// Bitrate tables (kbps) indexed [isMpeg1 ? 1 : 0][layer 1=L3,2=L2,3=L1][bitrateIndex].
-const MP3_BITRATES = {
-    1: {
-        3: [0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448], // Layer I
-        2: [0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384], // Layer II
-        1: [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320], // Layer III
-    },
-    0: {
-        3: [0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256], // Layer I
-        2: [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160], // Layer II
-        1: [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160], // Layer III
-    },
-};
-const MP3_SAMPLE_RATES = {
-    3: [44100, 48000, 32000], // MPEG 1
-    2: [22050, 24000, 16000], // MPEG 2
-    0: [11025, 12000, 8000], // MPEG 2.5
-};
-// Walk the MPEG audio frames in one AVI audio chunk and return the number of PCM
-// samples it decodes to. MP3 frames carry a constant number of samples each
-// (1152 for MPEG-1 Layer III, 576 for MPEG-2/2.5), independent of bitrate, so a
-// frame count gives a sample-exact timeline even for VBR — unlike a byte clock.
-// Returns 0 if no valid frame header is found.
-const mp3SampleCount = (data) => {
-    let pos = 0;
-    let samples = 0;
-    while (pos + 4 <= data.length) {
-        // Frame sync: 11 set bits.
-        if (data[pos] !== 0xff || (data[pos + 1] & 0xe0) !== 0xe0) {
-            pos++;
-            continue;
-        }
-        const versionId = (data[pos + 1] >> 3) & 0x3; // 3=MPEG1, 2=MPEG2, 0=MPEG2.5, 1=reserved
-        const layerId = (data[pos + 1] >> 1) & 0x3; // 1=L3, 2=L2, 3=L1, 0=reserved
-        const bitrateIdx = (data[pos + 2] >> 4) & 0xf;
-        const sampleRateIdx = (data[pos + 2] >> 2) & 0x3;
-        const padding = (data[pos + 2] >> 1) & 0x1;
-        if (versionId === 1 || layerId === 0 || bitrateIdx === 0 || bitrateIdx === 15 || sampleRateIdx === 3) {
-            pos++;
-            continue;
-        }
-        const isMpeg1 = versionId === 3;
-        const bitrate = MP3_BITRATES[isMpeg1 ? 1 : 0][layerId][bitrateIdx] * 1000;
-        const sampleRate = MP3_SAMPLE_RATES[versionId][sampleRateIdx];
-        const samplesPerFrame = layerId === 3 ? 384 : layerId === 2 ? 1152 : (isMpeg1 ? 1152 : 576);
-        const frameLength = layerId === 3
-            ? (Math.floor(12 * bitrate / sampleRate) + padding) * 4
-            : Math.floor((isMpeg1 ? 144 : 72) * bitrate / sampleRate) + padding;
-        if (frameLength <= 0) {
-            pos++;
-            continue;
-        }
-        samples += samplesPerFrame;
-        pos += frameLength;
-    }
-    return samples;
-};
 export class AviDemuxer extends Demuxer {
     constructor(input) {
         super(input);
@@ -406,49 +349,44 @@ export class AviDemuxer extends Demuxer {
                 }
             }
             else if (stream.type === 'audio') {
-                if (this.audioCodecFor(stream) === 'mp3' && await this.assignMp3Timestamps(stream)) {
-                    continue;
-                }
-                // CBR byte-clock fallback: timestamp = bytes-so-far / avgBytesPerSec.
-                const bps = stream.avgBytesPerSec
-                    || (stream.sampleRate * stream.channels * 2)
-                    || 1;
-                let cumBytes = 0;
+                // Distribute timestamps across chunks by byte share. We deliberately
+                // do NOT frame-scan VBR MP3 for sample-exact timing: the audio chunks
+                // are interleaved across the whole movi, so reading them all would
+                // pull the entire file before playback can start, defeating streaming.
+                //
+                // The AVI stream header gives the exact total audio duration
+                // (length blocks × scale / rate). When available we anchor the byte
+                // distribution to it, so both endpoints are exact and VBR causes only
+                // bounded local jitter with zero net drift. Otherwise we fall back to
+                // the avgBytesPerSec byte clock.
+                let totalBytes = 0;
                 for (const sample of stream.samples) {
-                    sample.timestamp = cumBytes / bps;
-                    sample.duration = sample.size / bps;
-                    cumBytes += sample.size;
+                    totalBytes += sample.size;
+                }
+                const headerDur = stream.length > 0 && stream.scale > 0 && stream.rate > 0
+                    ? stream.length * stream.scale / stream.rate
+                    : 0;
+                if (headerDur > 0 && totalBytes > 0) {
+                    let cumBytes = 0;
+                    for (const sample of stream.samples) {
+                        sample.timestamp = (cumBytes / totalBytes) * headerDur;
+                        sample.duration = (sample.size / totalBytes) * headerDur;
+                        cumBytes += sample.size;
+                    }
+                }
+                else {
+                    const bps = stream.avgBytesPerSec
+                        || (stream.sampleRate * stream.channels * 2)
+                        || 1;
+                    let cumBytes = 0;
+                    for (const sample of stream.samples) {
+                        sample.timestamp = cumBytes / bps;
+                        sample.duration = sample.size / bps;
+                        cumBytes += sample.size;
+                    }
                 }
             }
         }
-    }
-    // Sample-exact MP3 timing: each chunk's duration is its decoded sample count
-    // (counted from the MP3 frame headers) over the sample rate. The byte clock
-    // above drifts by seconds on VBR streams because chunk byte size doesn't track
-    // chunk duration. Returns false (so the caller falls back) if no frames parse.
-    async assignMp3Timestamps(stream) {
-        const sampleRate = stream.sampleRate || MP3_SAMPLE_RATES[3][1];
-        const counts = [];
-        let totalSamples = 0;
-        for (const sample of stream.samples) {
-            const s = await this.slice(sample.offset, sample.size);
-            if (!s) {
-                return false;
-            }
-            const n = mp3SampleCount(readBytes(s, sample.size));
-            counts.push(n);
-            totalSamples += n;
-        }
-        if (totalSamples === 0) {
-            return false;
-        }
-        let cumSamples = 0;
-        for (let i = 0; i < stream.samples.length; i++) {
-            stream.samples[i].timestamp = cumSamples / sampleRate;
-            stream.samples[i].duration = counts[i] / sampleRate;
-            cumSamples += counts[i];
-        }
-        return true;
     }
     buildTrackBackings() {
         for (const stream of this.streams) {

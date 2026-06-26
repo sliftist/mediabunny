@@ -12628,65 +12628,6 @@ var Mediabunny = (() => {
     "M4S2",
     "DM4V"
   ]);
-  var MP3_BITRATES = {
-    1: {
-      // MPEG 1
-      3: [0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448],
-      // Layer I
-      2: [0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384],
-      // Layer II
-      1: [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320]
-      // Layer III
-    },
-    0: {
-      // MPEG 2 / 2.5
-      3: [0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256],
-      // Layer I
-      2: [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160],
-      // Layer II
-      1: [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160]
-      // Layer III
-    }
-  };
-  var MP3_SAMPLE_RATES = {
-    3: [44100, 48e3, 32e3],
-    // MPEG 1
-    2: [22050, 24e3, 16e3],
-    // MPEG 2
-    0: [11025, 12e3, 8e3]
-    // MPEG 2.5
-  };
-  var mp3SampleCount = (data) => {
-    let pos = 0;
-    let samples = 0;
-    while (pos + 4 <= data.length) {
-      if (data[pos] !== 255 || (data[pos + 1] & 224) !== 224) {
-        pos++;
-        continue;
-      }
-      const versionId = data[pos + 1] >> 3 & 3;
-      const layerId = data[pos + 1] >> 1 & 3;
-      const bitrateIdx = data[pos + 2] >> 4 & 15;
-      const sampleRateIdx = data[pos + 2] >> 2 & 3;
-      const padding = data[pos + 2] >> 1 & 1;
-      if (versionId === 1 || layerId === 0 || bitrateIdx === 0 || bitrateIdx === 15 || sampleRateIdx === 3) {
-        pos++;
-        continue;
-      }
-      const isMpeg1 = versionId === 3;
-      const bitrate = MP3_BITRATES[isMpeg1 ? 1 : 0][layerId][bitrateIdx] * 1e3;
-      const sampleRate = MP3_SAMPLE_RATES[versionId][sampleRateIdx];
-      const samplesPerFrame = layerId === 3 ? 384 : layerId === 2 ? 1152 : isMpeg1 ? 1152 : 576;
-      const frameLength = layerId === 3 ? (Math.floor(12 * bitrate / sampleRate) + padding) * 4 : Math.floor((isMpeg1 ? 144 : 72) * bitrate / sampleRate) + padding;
-      if (frameLength <= 0) {
-        pos++;
-        continue;
-      }
-      samples += samplesPerFrame;
-      pos += frameLength;
-    }
-    return samples;
-  };
   var AviDemuxer = class extends Demuxer {
     constructor(input) {
       super(input);
@@ -13015,46 +12956,29 @@ var Mediabunny = (() => {
             stream.samples[i].duration = frameDur;
           }
         } else if (stream.type === "audio") {
-          if (this.audioCodecFor(stream) === "mp3" && await this.assignMp3Timestamps(stream)) {
-            continue;
-          }
-          const bps = stream.avgBytesPerSec || stream.sampleRate * stream.channels * 2 || 1;
-          let cumBytes = 0;
+          let totalBytes = 0;
           for (const sample of stream.samples) {
-            sample.timestamp = cumBytes / bps;
-            sample.duration = sample.size / bps;
-            cumBytes += sample.size;
+            totalBytes += sample.size;
+          }
+          const headerDur = stream.length > 0 && stream.scale > 0 && stream.rate > 0 ? stream.length * stream.scale / stream.rate : 0;
+          if (headerDur > 0 && totalBytes > 0) {
+            let cumBytes = 0;
+            for (const sample of stream.samples) {
+              sample.timestamp = cumBytes / totalBytes * headerDur;
+              sample.duration = sample.size / totalBytes * headerDur;
+              cumBytes += sample.size;
+            }
+          } else {
+            const bps = stream.avgBytesPerSec || stream.sampleRate * stream.channels * 2 || 1;
+            let cumBytes = 0;
+            for (const sample of stream.samples) {
+              sample.timestamp = cumBytes / bps;
+              sample.duration = sample.size / bps;
+              cumBytes += sample.size;
+            }
           }
         }
       }
-    }
-    // Sample-exact MP3 timing: each chunk's duration is its decoded sample count
-    // (counted from the MP3 frame headers) over the sample rate. The byte clock
-    // above drifts by seconds on VBR streams because chunk byte size doesn't track
-    // chunk duration. Returns false (so the caller falls back) if no frames parse.
-    async assignMp3Timestamps(stream) {
-      const sampleRate = stream.sampleRate || MP3_SAMPLE_RATES[3][1];
-      const counts = [];
-      let totalSamples = 0;
-      for (const sample of stream.samples) {
-        const s = await this.slice(sample.offset, sample.size);
-        if (!s) {
-          return false;
-        }
-        const n = mp3SampleCount(readBytes(s, sample.size));
-        counts.push(n);
-        totalSamples += n;
-      }
-      if (totalSamples === 0) {
-        return false;
-      }
-      let cumSamples = 0;
-      for (let i = 0; i < stream.samples.length; i++) {
-        stream.samples[i].timestamp = cumSamples / sampleRate;
-        stream.samples[i].duration = counts[i] / sampleRate;
-        cumSamples += counts[i];
-      }
-      return true;
     }
     buildTrackBackings() {
       for (const stream of this.streams) {
