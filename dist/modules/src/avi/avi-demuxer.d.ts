@@ -30,6 +30,10 @@ type AviStream = {
     sampleRate: number;
     avgBytesPerSec: number;
     blockAlign: number;
+    superIndex: {
+        offset: number;
+        size: number;
+    }[];
     samples: AviSample[];
     backing: InputTrackBacking | null;
 };
@@ -52,6 +56,8 @@ export declare class AviDemuxer extends Demuxer {
     readMetadata(): Promise<void>;
     private parseHdrl;
     private parseStrl;
+    private parseSuperIndex;
+    private parseOpenDmlIndex;
     private parseIdx1;
     private scanMovi;
     private assignTimestamps;

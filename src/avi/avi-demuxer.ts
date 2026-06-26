@@ -14,7 +14,7 @@ import { PacketRetrievalOptions } from '../media-sink';
 import { DEFAULT_TRACK_DISPOSITION, MetadataTags } from '../metadata';
 import { assert, binarySearchLessOrEqual, Rotation, UNDETERMINED_LANGUAGE } from '../misc';
 import { EncodedPacket, PLACEHOLDER_DATA } from '../packet';
-import { readAscii, readBytes, readI32Le, Reader, readU16, readU32 } from '../reader';
+import { FileSlice, readAscii, readBytes, readI32Le, Reader, readU16, readU32, readU64, readU8 } from '../reader';
 
 const AVIIF_KEYFRAME = 0x10;
 const WAVE_FORMAT_MP3 = 0x0055;
@@ -105,6 +105,12 @@ type AviStream = {
 	sampleRate: number;
 	avgBytesPerSec: number;
 	blockAlign: number;
+	// OpenDML super-index ('indx'): locations of this stream's ix## subindex
+	// chunks. When present, these let us build the sample table from a handful
+	// of small reads instead of scanning every movi chunk header to EOF — and
+	// they cover the whole file, including AVIX segments past the 1 GB legacy
+	// idx1 limit.
+	superIndex: { offset: number; size: number }[];
 	// Built packet table
 	samples: AviSample[];
 	backing: InputTrackBacking | null;
@@ -189,7 +195,10 @@ export class AviDemuxer extends Demuxer {
 				throw new Error('Invalid AVI file - missing "movi" list');
 			}
 
-			if (idx1Pos !== -1) {
+			const hasSuperIndex = this.streams.some(s => s.superIndex.length > 0);
+			if (hasSuperIndex) {
+				await this.parseOpenDmlIndex();
+			} else if (idx1Pos !== -1) {
 				await this.parseIdx1(idx1Pos, idx1Size, moviDataStart);
 			} else {
 				await this.scanMovi(moviDataStart, fileSize);
@@ -219,7 +228,7 @@ export class AviDemuxer extends Demuxer {
 						type: 'other', fccHandler: '', scale: 1, rate: 1, start: 0, length: 0, sampleSize: 0,
 						width: 0, height: 0, compression: '', codecPrivate: null,
 						formatTag: 0, channels: 0, sampleRate: 0, avgBytesPerSec: 0, blockAlign: 0,
-						samples: [], backing: null,
+						superIndex: [], samples: [], backing: null,
 					};
 					this.streams.push(currentStream);
 					await this.parseStrl(dataStart + 4, ckSize - 4, currentStream);
@@ -285,9 +294,83 @@ export class AviDemuxer extends Demuxer {
 						stream.blockAlign = readU16(s, true);
 					}
 				}
+			} else if (ckId === 'indx') {
+				const s = await this.slice(dataStart, ckSize);
+				if (s) {
+					this.parseSuperIndex(s, stream);
+				}
 			}
 
 			pos = dataStart + ckSize + (ckSize & 1);
+		}
+	}
+
+	// OpenDML AVISUPERINDEX ('indx' inside a stream's strl): a table of pointers
+	// to that stream's ix## subindex chunks. We just collect the (offset, size)
+	// of each subindex here; parseOpenDmlIndex reads them to build the samples.
+	private parseSuperIndex(s: FileSlice, stream: AviStream) {
+		const wLongsPerEntry = readU16(s, true);
+		readU8(s); // bIndexSubType
+		const bIndexType = readU8(s);
+		const nEntriesInUse = readU32(s, true);
+		readU32(s, true); // dwChunkId
+		readU32(s, true); readU32(s, true); readU32(s, true); // dwReserved[3]
+		// AVI_INDEX_OF_INDEXES == 0, 4 longs per entry. Anything else is a field
+		// index / standard index we don't expect here — bail rather than misread.
+		if (bIndexType !== 0 || wLongsPerEntry !== 4) {
+			return;
+		}
+		for (let i = 0; i < nEntriesInUse; i++) {
+			const offset = readU64(s, true); // absolute file offset of the ix## chunk
+			const size = readU32(s, true);
+			readU32(s, true); // dwDuration (stream ticks; unused)
+			if (size > 0) {
+				stream.superIndex.push({ offset, size });
+			}
+		}
+	}
+
+	// Read every ix## standard subindex (AVISTDINDEX) a stream's superindex
+	// points at, appending its chunks to stream.samples. This covers the whole
+	// file (all AVIX segments), so it's preferred over idx1, which only indexes
+	// the first RIFF segment of a multi-segment OpenDML file.
+	private async parseOpenDmlIndex() {
+		for (const stream of this.streams) {
+			for (const { offset, size } of stream.superIndex) {
+				const s = await this.slice(offset, size);
+				if (!s) {
+					continue;
+				}
+				readAscii(s, 4); // 'ix##'
+				readU32(s, true); // chunk data size
+				const wLongsPerEntry = readU16(s, true);
+				readU8(s); // bIndexSubType
+				const bIndexType = readU8(s);
+				const nEntriesInUse = readU32(s, true);
+				readU32(s, true); // dwChunkId
+				const qwBaseOffset = readU64(s, true);
+				readU32(s, true); // dwReserved
+				// AVI_INDEX_OF_CHUNKS == 1, 2 longs per entry. Bail on anything else.
+				if (bIndexType !== 1 || wLongsPerEntry !== 2) {
+					continue;
+				}
+				for (let i = 0; i < nEntriesInUse; i++) {
+					const dwOffset = readU32(s, true); // relative to qwBaseOffset, points at DATA
+					const dwSize = readU32(s, true);
+					const size2 = dwSize & 0x7fffffff;
+					if (size2 === 0) {
+						continue;
+					}
+					stream.samples.push({
+						offset: qwBaseOffset + dwOffset,
+						size: size2,
+						key: (dwSize & 0x80000000) === 0, // high bit set = delta (non-key)
+						timestamp: 0,
+						duration: 0,
+						sequenceNumber: stream.samples.length,
+					});
+				}
+			}
 		}
 	}
 
