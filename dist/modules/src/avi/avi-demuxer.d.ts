@@ -61,6 +61,8 @@ export declare class AviDemuxer extends Demuxer {
     private parseIdx1;
     private scanMovi;
     private assignTimestamps;
+    private assignInterleavedAudioTimestamps;
+    private assignByteClockAudioTimestamps;
     private buildTrackBackings;
     videoCodecFor(stream: AviStream): VideoCodec | null;
     audioCodecFor(stream: AviStream): AudioCodec | null;

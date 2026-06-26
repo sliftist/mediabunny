@@ -12947,7 +12947,7 @@ var Mediabunny = (() => {
         pos = dataStart + ckSize + (ckSize & 1);
       }
     }
-    async assignTimestamps() {
+    assignTimestamps() {
       for (const stream of this.streams) {
         if (stream.type === "video") {
           const frameDur = stream.scale / stream.rate;
@@ -12955,28 +12955,85 @@ var Mediabunny = (() => {
             stream.samples[i].timestamp = (stream.start + i) * frameDur;
             stream.samples[i].duration = frameDur;
           }
-        } else if (stream.type === "audio") {
-          let totalBytes = 0;
-          for (const sample of stream.samples) {
-            totalBytes += sample.size;
-          }
-          const headerDur = stream.length > 0 && stream.scale > 0 && stream.rate > 0 ? stream.length * stream.scale / stream.rate : 0;
-          if (headerDur > 0 && totalBytes > 0) {
-            let cumBytes = 0;
-            for (const sample of stream.samples) {
-              sample.timestamp = cumBytes / totalBytes * headerDur;
-              sample.duration = sample.size / totalBytes * headerDur;
-              cumBytes += sample.size;
-            }
-          } else {
-            const bps = stream.avgBytesPerSec || stream.sampleRate * stream.channels * 2 || 1;
-            let cumBytes = 0;
-            for (const sample of stream.samples) {
-              sample.timestamp = cumBytes / bps;
-              sample.duration = sample.size / bps;
-              cumBytes += sample.size;
-            }
-          }
+        }
+      }
+      const video = this.streams.find((s) => s.type === "video" && s.samples.length >= 2) ?? null;
+      for (const stream of this.streams) {
+        if (stream.type !== "audio" || stream.samples.length === 0) {
+          continue;
+        }
+        if (video) {
+          this.assignInterleavedAudioTimestamps(stream, video);
+        } else {
+          this.assignByteClockAudioTimestamps(stream);
+        }
+      }
+    }
+    // AVI is interleaved: each audio chunk sits in the file next to the video
+    // frame it should play with. The chunks carry no timestamps of their own, but
+    // the index gives every chunk's file offset, and video frames have an exact
+    // frame-clock timestamp. So we map each audio chunk's offset onto the video
+    // timeline by linear interpolation between the two surrounding video frames.
+    // This tracks the true playback time locally (to within one video-frame
+    // interval) regardless of VBR, and needs no media reads — unlike a byte clock,
+    // which assumes a constant bitrate and drifts seconds out of sync on VBR audio.
+    assignInterleavedAudioTimestamps(audio, video) {
+      const v = video.samples;
+      const n = audio.samples.length;
+      let j = 0;
+      for (let i = 0; i < n; i++) {
+        const off = audio.samples[i].offset;
+        while (j < v.length - 2 && v[j + 1].offset <= off) {
+          j++;
+        }
+        const o0 = v[j].offset;
+        const o1 = v[j + 1].offset;
+        const frac = o1 > o0 ? (off - o0) / (o1 - o0) : 0;
+        audio.samples[i].timestamp = Math.max(0, v[j].timestamp + frac * (v[j + 1].timestamp - v[j].timestamp));
+      }
+      const headerDur = audio.length > 0 && audio.scale > 0 && audio.rate > 0 ? audio.length * audio.scale / audio.rate : 0;
+      const preload = headerDur > 0 ? headerDur - audio.samples[n - 1].timestamp : 0;
+      if (preload > 0 && preload < 5) {
+        for (let i = 0; i < n; i++) {
+          audio.samples[i].timestamp = Math.min(headerDur, audio.samples[i].timestamp + preload);
+        }
+      }
+      for (let i = 0; i < n; i++) {
+        const ts = audio.samples[i].timestamp;
+        let end;
+        if (i + 1 < n) {
+          end = audio.samples[i + 1].timestamp;
+        } else if (headerDur > ts) {
+          end = headerDur;
+        } else {
+          end = ts + (i > 0 ? ts - audio.samples[i - 1].timestamp : 0);
+        }
+        audio.samples[i].duration = Math.max(0, end - ts);
+      }
+    }
+    // Fallback when there's no video track to interleave against. Distributes
+    // timestamps by byte share, anchored to the exact total audio duration from
+    // the stream header when available, else the avgBytesPerSec byte clock.
+    assignByteClockAudioTimestamps(stream) {
+      let totalBytes = 0;
+      for (const sample of stream.samples) {
+        totalBytes += sample.size;
+      }
+      const headerDur = stream.length > 0 && stream.scale > 0 && stream.rate > 0 ? stream.length * stream.scale / stream.rate : 0;
+      if (headerDur > 0 && totalBytes > 0) {
+        let cumBytes = 0;
+        for (const sample of stream.samples) {
+          sample.timestamp = cumBytes / totalBytes * headerDur;
+          sample.duration = sample.size / totalBytes * headerDur;
+          cumBytes += sample.size;
+        }
+      } else {
+        const bps = stream.avgBytesPerSec || stream.sampleRate * stream.channels * 2 || 1;
+        let cumBytes = 0;
+        for (const sample of stream.samples) {
+          sample.timestamp = cumBytes / bps;
+          sample.duration = sample.size / bps;
+          cumBytes += sample.size;
         }
       }
     }
