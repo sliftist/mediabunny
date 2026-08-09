@@ -1907,6 +1907,12 @@ var Mediabunny = (() => {
         string = string.slice(0, -AV1_DEFAULT_SUFFIX.length);
       }
       return string;
+    } else if (codec === "mp4v") {
+      let profileLevel = 1;
+      if (codecDescription && codecDescription.byteLength >= 5 && codecDescription[0] === 0 && codecDescription[1] === 0 && codecDescription[2] === 1 && codecDescription[3] === 176) {
+        profileLevel = codecDescription[4];
+      }
+      return `mp4v.20.${profileLevel}`;
     }
     throw new TypeError(`Unhandled codec '${codec}'.`);
   };
@@ -6089,6 +6095,7 @@ var Mediabunny = (() => {
                   track.info.codec = "vp9";
                 } else if (codecName === "av01") {
                   track.info.codec = "av1";
+                } else if (codecName === "mp4v") {
                 } else if (codecName === null) {
                   Logging._warn(`Unknown encrypted video codec due to missing frma box.`);
                 } else {
@@ -6464,10 +6471,9 @@ var Mediabunny = (() => {
         case "esds":
           {
             const track = this.currentTrack;
-            if (!track) {
+            if (!track || !track.info) {
               break;
             }
-            assert(track.info?.type === "audio");
             slice.skip(4);
             const tag = readU8(slice);
             assert(tag === 3);
@@ -6492,20 +6498,30 @@ var Mediabunny = (() => {
             const decoderConfigDescriptorLength = readIsomVariableInteger(slice);
             const payloadStart = slice.filePos;
             const objectTypeIndication = readU8(slice);
-            if (objectTypeIndication === 64 || objectTypeIndication === 103) {
-              track.info.codec = "aac";
-              track.info.aacCodecInfo = {
-                isMpeg2: objectTypeIndication === 103,
-                objectType: null
-              };
-            } else if (objectTypeIndication === 105 || objectTypeIndication === 107) {
-              track.info.codec = "mp3";
-            } else if (objectTypeIndication === 221) {
-              track.info.codec = "vorbis";
+            if (track.info.type === "audio") {
+              if (objectTypeIndication === 64 || objectTypeIndication === 103) {
+                track.info.codec = "aac";
+                track.info.aacCodecInfo = {
+                  isMpeg2: objectTypeIndication === 103,
+                  objectType: null
+                };
+              } else if (objectTypeIndication === 105 || objectTypeIndication === 107) {
+                track.info.codec = "mp3";
+              } else if (objectTypeIndication === 221) {
+                track.info.codec = "vorbis";
+              } else {
+                Logging._warn(
+                  `Unsupported audio codec (objectTypeIndication ${objectTypeIndication}) - discarding track.`
+                );
+              }
             } else {
-              Logging._warn(
-                `Unsupported audio codec (objectTypeIndication ${objectTypeIndication}) - discarding track.`
-              );
+              if (objectTypeIndication === 32) {
+                track.info.codec = "mp4v";
+              } else {
+                Logging._warn(
+                  `Unsupported video codec (objectTypeIndication ${objectTypeIndication}) - discarding track.`
+                );
+              }
             }
             slice.skip(1 + 3 + 4 + 4);
             if (decoderConfigDescriptorLength > slice.filePos - payloadStart) {
@@ -6513,7 +6529,7 @@ var Mediabunny = (() => {
               assert(decoderSpecificInfoTag === 5);
               const decoderSpecificInfoLength = readIsomVariableInteger(slice);
               track.info.codecDescription = readBytes(slice, decoderSpecificInfoLength);
-              if (track.info.codec === "aac") {
+              if (track.info.type === "audio" && track.info.codec === "aac") {
                 const audioSpecificConfig = parseAacAudioSpecificConfig(track.info.codecDescription);
                 if (audioSpecificConfig.numberOfChannels !== null) {
                   track.info.numberOfChannels = audioSpecificConfig.numberOfChannels;

@@ -505,6 +505,22 @@ export const extractVideoCodecString = (trackInfo: {
 		}
 
 		return string;
+	} else if (codec === 'mp4v') {
+		// RFC 6381: mp4v.<objectTypeIndication>.<profile-level-indication>. We
+		// only demux MPEG-4 Visual (OTI 0x20); the profile/level byte lives in
+		// the Visual Object Sequence header of the decoder config when present.
+		let profileLevel = 1;
+		if (
+			codecDescription
+			&& codecDescription.byteLength >= 5
+			&& codecDescription[0] === 0x00
+			&& codecDescription[1] === 0x00
+			&& codecDescription[2] === 0x01
+			&& codecDescription[3] === 0xb0
+		) {
+			profileLevel = codecDescription[4]!;
+		}
+		return `mp4v.20.${profileLevel}`;
 	}
 
 	throw new TypeError(`Unhandled codec '${codec}'.`);

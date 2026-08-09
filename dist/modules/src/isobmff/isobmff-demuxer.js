@@ -707,6 +707,9 @@ export class IsobmffDemuxer extends Demuxer {
                             else if (codecName === 'av01') {
                                 track.info.codec = 'av1';
                             }
+                            else if (codecName === 'mp4v') {
+                                // The codec (MPEG-4 Part 2) is set by the esds box
+                            }
                             else if (codecName === null) {
                                 Logging._warn(`Unknown encrypted video codec due to missing frma box.`);
                             }
@@ -1130,11 +1133,12 @@ export class IsobmffDemuxer extends Demuxer {
                 break;
             case 'esds':
                 {
+                    // Found under mp4a AUDIO sample entries, but also under mp4v
+                    // VIDEO sample entries (MPEG-4 Part 2), so it must handle both.
                     const track = this.currentTrack;
-                    if (!track) {
+                    if (!track || !track.info) {
                         break;
                     }
-                    assert(track.info?.type === 'audio');
                     slice.skip(4); // Version + flags
                     const tag = readU8(slice);
                     assert(tag === 0x03); // ES Descriptor
@@ -1159,21 +1163,31 @@ export class IsobmffDemuxer extends Demuxer {
                     const decoderConfigDescriptorLength = readIsomVariableInteger(slice); // Length
                     const payloadStart = slice.filePos;
                     const objectTypeIndication = readU8(slice);
-                    if (objectTypeIndication === 0x40 || objectTypeIndication === 0x67) {
-                        track.info.codec = 'aac';
-                        track.info.aacCodecInfo = {
-                            isMpeg2: objectTypeIndication === 0x67,
-                            objectType: null,
-                        };
-                    }
-                    else if (objectTypeIndication === 0x69 || objectTypeIndication === 0x6b) {
-                        track.info.codec = 'mp3';
-                    }
-                    else if (objectTypeIndication === 0xdd) {
-                        track.info.codec = 'vorbis'; // "nonstandard, gpac uses it" - FFmpeg
+                    if (track.info.type === 'audio') {
+                        if (objectTypeIndication === 0x40 || objectTypeIndication === 0x67) {
+                            track.info.codec = 'aac';
+                            track.info.aacCodecInfo = {
+                                isMpeg2: objectTypeIndication === 0x67,
+                                objectType: null,
+                            };
+                        }
+                        else if (objectTypeIndication === 0x69 || objectTypeIndication === 0x6b) {
+                            track.info.codec = 'mp3';
+                        }
+                        else if (objectTypeIndication === 0xdd) {
+                            track.info.codec = 'vorbis'; // "nonstandard, gpac uses it" - FFmpeg
+                        }
+                        else {
+                            Logging._warn(`Unsupported audio codec (objectTypeIndication ${objectTypeIndication}) - discarding track.`);
+                        }
                     }
                     else {
-                        Logging._warn(`Unsupported audio codec (objectTypeIndication ${objectTypeIndication}) - discarding track.`);
+                        if (objectTypeIndication === 0x20) {
+                            track.info.codec = 'mp4v'; // MPEG-4 Part 2 (Visual)
+                        }
+                        else {
+                            Logging._warn(`Unsupported video codec (objectTypeIndication ${objectTypeIndication}) - discarding track.`);
+                        }
                     }
                     slice.skip(1 + 3 + 4 + 4);
                     if (decoderConfigDescriptorLength > slice.filePos - payloadStart) {
@@ -1182,7 +1196,7 @@ export class IsobmffDemuxer extends Demuxer {
                         assert(decoderSpecificInfoTag === 0x05); // DecoderSpecificInfo
                         const decoderSpecificInfoLength = readIsomVariableInteger(slice);
                         track.info.codecDescription = readBytes(slice, decoderSpecificInfoLength);
-                        if (track.info.codec === 'aac') {
+                        if (track.info.type === 'audio' && track.info.codec === 'aac') {
                             // Let's try to deduce more accurate values directly from the AudioSpecificConfig:
                             const audioSpecificConfig = parseAacAudioSpecificConfig(track.info.codecDescription);
                             if (audioSpecificConfig.numberOfChannels !== null) {
