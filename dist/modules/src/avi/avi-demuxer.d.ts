@@ -12,6 +12,18 @@ import { InputTrackBacking } from '../input-track.js';
 import { PacketRetrievalOptions } from '../media-sink.js';
 import { MetadataTags } from '../metadata.js';
 import { Reader } from '../reader.js';
+type Ac3Header = {
+    fscod: number;
+    sampleRate: number;
+    frameBytes: number;
+    avgFrameBytes: number;
+};
+type Ac3Layout = {
+    chunks: AviSample[];
+    starts: number[];
+    total: number;
+    header: Ac3Header;
+};
 type AviStream = {
     index: number;
     type: 'video' | 'audio' | 'other';
@@ -35,6 +47,7 @@ type AviStream = {
         size: number;
     }[];
     samples: AviSample[];
+    ac3: Ac3Layout | null;
     backing: InputTrackBacking | null;
 };
 type AviSample = {
@@ -44,6 +57,7 @@ type AviSample = {
     timestamp: number;
     duration: number;
     sequenceNumber: number;
+    streamPos?: number;
 };
 export declare class AviDemuxer extends Demuxer {
     reader: Reader;
@@ -63,10 +77,13 @@ export declare class AviDemuxer extends Demuxer {
     private assignTimestamps;
     private assignInterleavedAudioTimestamps;
     private assignByteClockAudioTimestamps;
+    private readStreamBytes;
+    private reframeAc3;
+    private readAc3Frame;
     private buildTrackBackings;
     videoCodecFor(stream: AviStream): VideoCodec | null;
     audioCodecFor(stream: AviStream): AudioCodec | null;
-    readSampleData(sample: AviSample, options: PacketRetrievalOptions): Promise<Uint8Array>;
+    readSampleData(stream: AviStream, sample: AviSample, options: PacketRetrievalOptions): Promise<Uint8Array>;
     getMimeType(): Promise<string>;
     getTrackBackings(): Promise<InputTrackBacking[]>;
     getMetadataTags(): Promise<MetadataTags>;

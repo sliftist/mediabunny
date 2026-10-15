@@ -12626,6 +12626,32 @@ var Mediabunny = (() => {
   var AVIIF_KEYFRAME = 16;
   var WAVE_FORMAT_MP3 = 85;
   var WAVE_FORMAT_MP3_ALT = 80;
+  var WAVE_FORMAT_DOLBY_AC3 = 8192;
+  var AC3_SAMPLES_PER_FRAME2 = 1536;
+  var AC3_SAMPLE_RATES2 = [48e3, 44100, 32e3];
+  var AC3_BITRATES_KBPS = [32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 448, 512, 576, 640];
+  var AC3_RESYNC_WINDOW = 64;
+  var AC3_PROBE_BYTES = 8192;
+  var parseAc3Header = (b, p) => {
+    if (p + 6 > b.length || b[p] !== 11 || b[p + 1] !== 119) {
+      return null;
+    }
+    const fscod = b[p + 4] >> 6;
+    const frmsizecod = b[p + 4] & 63;
+    const bsid = b[p + 5] >> 3;
+    if (fscod === 3 || frmsizecod > 37 || bsid > 10) {
+      return null;
+    }
+    const kbps = AC3_BITRATES_KBPS[frmsizecod >> 1];
+    const sampleRate = AC3_SAMPLE_RATES2[fscod];
+    const words = fscod === 0 ? kbps * 2 : fscod === 2 ? kbps * 3 : Math.floor(kbps * 320 / 147) + (frmsizecod & 1);
+    return {
+      fscod,
+      sampleRate,
+      frameBytes: words * 2,
+      avgFrameBytes: kbps * 1e3 / 8 * AC3_SAMPLES_PER_FRAME2 / sampleRate
+    };
+  };
   var MP4V_FOURCCS = /* @__PURE__ */ new Set([
     "XVID",
     "xvid",
@@ -12711,6 +12737,11 @@ var Mediabunny = (() => {
         } else {
           await this.scanMovi(moviDataStart, fileSize);
         }
+        for (const stream of this.streams) {
+          if (stream.type === "audio" && stream.formatTag === WAVE_FORMAT_DOLBY_AC3) {
+            await this.reframeAc3(stream);
+          }
+        }
         await this.assignTimestamps();
         this.buildTrackBackings();
       })();
@@ -12748,6 +12779,7 @@ var Mediabunny = (() => {
               blockAlign: 0,
               superIndex: [],
               samples: [],
+              ac3: null,
               backing: null
             };
             this.streams.push(currentStream);
@@ -12975,7 +13007,7 @@ var Mediabunny = (() => {
       }
       const video = this.streams.find((s) => s.type === "video" && s.samples.length >= 2) ?? null;
       for (const stream of this.streams) {
-        if (stream.type !== "audio" || stream.samples.length === 0) {
+        if (stream.type !== "audio" || stream.samples.length === 0 || stream.ac3) {
           continue;
         }
         if (video) {
@@ -13053,6 +13085,110 @@ var Mediabunny = (() => {
         }
       }
     }
+    async readStreamBytes(layout, pos, len) {
+      const start = Math.max(0, pos);
+      const end = Math.min(layout.total, pos + len);
+      const out = new Uint8Array(Math.max(0, end - start));
+      let i = Math.max(0, binarySearchLessOrEqual(layout.starts, start, (x) => x));
+      let at = start;
+      while (at < end && i < layout.chunks.length) {
+        const chunk = layout.chunks[i];
+        const within = at - layout.starts[i];
+        const n = Math.min(chunk.size - within, end - at);
+        if (n > 0) {
+          const s = await this.slice(chunk.offset + within, n);
+          assert(s);
+          out.set(readBytes(s, n), at - start);
+          at += n;
+        }
+        i++;
+      }
+      return out;
+    }
+    async reframeAc3(stream) {
+      if (stream.samples.length === 0) {
+        return;
+      }
+      const chunks = stream.samples;
+      const starts = [];
+      let total = 0;
+      for (const chunk of chunks) {
+        starts.push(total);
+        total += chunk.size;
+      }
+      const probe = await this.readStreamBytes({ chunks, starts, total }, 0, AC3_PROBE_BYTES);
+      let first = -1;
+      let header = null;
+      for (let p = 0; p + 6 <= probe.length; p++) {
+        const h = parseAc3Header(probe, p);
+        if (!h) {
+          continue;
+        }
+        const next = p + h.frameBytes;
+        if (next + 2 <= probe.length && (probe[next] !== 11 || probe[next + 1] !== 119)) {
+          continue;
+        }
+        first = p;
+        header = h;
+        break;
+      }
+      if (!header) {
+        return;
+      }
+      const layout = { chunks, starts, total, header };
+      let frameCount = Math.round((total - first) / header.avgFrameBytes);
+      if (frameCount > 0) {
+        const last2 = await this.readAc3Frame(layout, first + Math.round((frameCount - 1) * header.avgFrameBytes));
+        const h = parseAc3Header(last2, 0);
+        if (!h || last2.length < h.frameBytes) {
+          frameCount--;
+        }
+      }
+      const frameDur = AC3_SAMPLES_PER_FRAME2 / header.sampleRate;
+      const startSec = stream.rate > 0 ? stream.start * stream.scale / stream.rate : 0;
+      const frames = [];
+      for (let k = 0; k < frameCount; k++) {
+        frames.push({
+          offset: 0,
+          size: header.frameBytes,
+          key: true,
+          timestamp: startSec + k * frameDur,
+          duration: frameDur,
+          sequenceNumber: k,
+          streamPos: first + Math.round(k * header.avgFrameBytes)
+        });
+      }
+      stream.ac3 = layout;
+      stream.samples = frames;
+      stream.sampleRate = header.sampleRate;
+    }
+    async readAc3Frame(layout, nominal) {
+      const maxFrame = Math.ceil(layout.header.avgFrameBytes) + 2;
+      const windowStart = Math.max(0, nominal - AC3_RESYNC_WINDOW);
+      const buf = await this.readStreamBytes(layout, windowStart, nominal - windowStart + AC3_RESYNC_WINDOW + maxFrame + 2);
+      let best = -1;
+      let bestSize = 0;
+      let bestScore = Infinity;
+      for (let p = 0; p + 6 <= buf.length; p++) {
+        const h = parseAc3Header(buf, p);
+        if (!h || h.fscod !== layout.header.fscod) {
+          continue;
+        }
+        const next = p + h.frameBytes;
+        const verified = next + 2 <= buf.length && buf[next] === 11 && buf[next + 1] === 119;
+        const atEnd = windowStart + next === layout.total;
+        const score = Math.abs(windowStart + p - nominal) + (verified || atEnd ? 0 : AC3_RESYNC_WINDOW * 4);
+        if (score < bestScore) {
+          best = p;
+          bestSize = h.frameBytes;
+          bestScore = score;
+        }
+      }
+      if (best < 0) {
+        return buf.subarray(nominal - windowStart, nominal - windowStart + layout.header.frameBytes);
+      }
+      return buf.subarray(best, best + bestSize);
+    }
     buildTrackBackings() {
       for (const stream of this.streams) {
         if (stream.type === "video" && stream.samples.length > 0) {
@@ -13075,11 +13211,17 @@ var Mediabunny = (() => {
       if (stream.formatTag === WAVE_FORMAT_MP3 || stream.formatTag === WAVE_FORMAT_MP3_ALT) {
         return "mp3";
       }
+      if (stream.ac3) {
+        return "ac3";
+      }
       return null;
     }
-    async readSampleData(sample, options) {
+    async readSampleData(stream, sample, options) {
       if (options.metadataOnly) {
         return PLACEHOLDER_DATA;
+      }
+      if (stream.ac3 && sample.streamPos !== void 0) {
+        return await this.readAc3Frame(stream.ac3, sample.streamPos);
       }
       const s = await this.slice(sample.offset, sample.size);
       assert(s);
@@ -13102,7 +13244,7 @@ var Mediabunny = (() => {
     if (!sample) {
       return Promise.resolve(null);
     }
-    return demuxer.readSampleData(sample, options).then((data) => new EncodedPacket(
+    return demuxer.readSampleData(stream, sample, options).then((data) => new EncodedPacket(
       data,
       sample.key ? "key" : "delta",
       sample.timestamp,

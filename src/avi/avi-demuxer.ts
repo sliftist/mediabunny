@@ -19,6 +19,47 @@ import { FileSlice, readAscii, readBytes, readI32Le, Reader, readU16, readU32, r
 const AVIIF_KEYFRAME = 0x10;
 const WAVE_FORMAT_MP3 = 0x0055;
 const WAVE_FORMAT_MP3_ALT = 0x0050; // MPEG Layer-1/2 tag, occasionally seen for layer 3 too
+const WAVE_FORMAT_DOLBY_AC3 = 0x2000;
+
+const AC3_SAMPLES_PER_FRAME = 1536;
+const AC3_SAMPLE_RATES = [48000, 44100, 32000];
+const AC3_BITRATES_KBPS = [32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 448, 512, 576, 640];
+const AC3_RESYNC_WINDOW = 64;
+const AC3_PROBE_BYTES = 8192;
+
+type Ac3Header = { fscod: number; sampleRate: number; frameBytes: number; avgFrameBytes: number };
+
+const parseAc3Header = (b: Uint8Array, p: number): Ac3Header | null => {
+	if (p + 6 > b.length || b[p] !== 0x0b || b[p + 1] !== 0x77) {
+		return null;
+	}
+	const fscod = b[p + 4]! >> 6;
+	const frmsizecod = b[p + 4]! & 0x3f;
+	const bsid = b[p + 5]! >> 3;
+	if (fscod === 3 || frmsizecod > 37 || bsid > 10) {
+		return null;
+	}
+	const kbps = AC3_BITRATES_KBPS[frmsizecod >> 1]!;
+	const sampleRate = AC3_SAMPLE_RATES[fscod]!;
+	const words = fscod === 0
+		? kbps * 2
+		: fscod === 2
+			? kbps * 3
+			: Math.floor(kbps * 320 / 147) + (frmsizecod & 1);
+	return {
+		fscod,
+		sampleRate,
+		frameBytes: words * 2,
+		avgFrameBytes: kbps * 1000 / 8 * AC3_SAMPLES_PER_FRAME / sampleRate,
+	};
+};
+
+type Ac3Layout = {
+	chunks: AviSample[];
+	starts: number[];
+	total: number;
+	header: Ac3Header;
+};
 
 // FourCCs (in biCompression / strh fccHandler) that denote MPEG-4 Part 2 (ASP).
 const MP4V_FOURCCS = new Set([
@@ -54,6 +95,7 @@ type AviStream = {
 	superIndex: { offset: number; size: number }[];
 	// Built packet table
 	samples: AviSample[];
+	ac3: Ac3Layout | null;
 	backing: InputTrackBacking | null;
 };
 
@@ -64,6 +106,7 @@ type AviSample = {
 	timestamp: number;
 	duration: number;
 	sequenceNumber: number;
+	streamPos?: number;
 };
 
 export class AviDemuxer extends Demuxer {
@@ -144,6 +187,11 @@ export class AviDemuxer extends Demuxer {
 			} else {
 				await this.scanMovi(moviDataStart, fileSize);
 			}
+			for (const stream of this.streams) {
+				if (stream.type === 'audio' && stream.formatTag === WAVE_FORMAT_DOLBY_AC3) {
+					await this.reframeAc3(stream);
+				}
+			}
 			await this.assignTimestamps();
 			this.buildTrackBackings();
 		})();
@@ -169,7 +217,7 @@ export class AviDemuxer extends Demuxer {
 						type: 'other', fccHandler: '', scale: 1, rate: 1, start: 0, length: 0, sampleSize: 0,
 						width: 0, height: 0, compression: '', codecPrivate: null,
 						formatTag: 0, channels: 0, sampleRate: 0, avgBytesPerSec: 0, blockAlign: 0,
-						superIndex: [], samples: [], backing: null,
+						superIndex: [], samples: [], ac3: null, backing: null,
 					};
 					this.streams.push(currentStream);
 					await this.parseStrl(dataStart + 4, ckSize - 4, currentStream);
@@ -412,7 +460,7 @@ export class AviDemuxer extends Demuxer {
 		// usable video track; otherwise off a byte clock.
 		const video = this.streams.find(s => s.type === 'video' && s.samples.length >= 2) ?? null;
 		for (const stream of this.streams) {
-			if (stream.type !== 'audio' || stream.samples.length === 0) {
+			if (stream.type !== 'audio' || stream.samples.length === 0 || stream.ac3) {
 				continue;
 			}
 			if (video) {
@@ -511,6 +559,114 @@ export class AviDemuxer extends Demuxer {
 		}
 	}
 
+	private async readStreamBytes(layout: Pick<Ac3Layout, 'chunks' | 'starts' | 'total'>, pos: number, len: number) {
+		const start = Math.max(0, pos);
+		const end = Math.min(layout.total, pos + len);
+		const out = new Uint8Array(Math.max(0, end - start));
+		let i = Math.max(0, binarySearchLessOrEqual(layout.starts, start, x => x));
+		let at = start;
+		while (at < end && i < layout.chunks.length) {
+			const chunk = layout.chunks[i]!;
+			const within = at - layout.starts[i]!;
+			const n = Math.min(chunk.size - within, end - at);
+			if (n > 0) {
+				const s = await this.slice(chunk.offset + within, n);
+				assert(s);
+				out.set(readBytes(s, n), at - start);
+				at += n;
+			}
+			i++;
+		}
+		return out;
+	}
+
+	private async reframeAc3(stream: AviStream) {
+		if (stream.samples.length === 0) {
+			return;
+		}
+		const chunks = stream.samples;
+		const starts: number[] = [];
+		let total = 0;
+		for (const chunk of chunks) {
+			starts.push(total);
+			total += chunk.size;
+		}
+		const probe = await this.readStreamBytes({ chunks, starts, total }, 0, AC3_PROBE_BYTES);
+		let first = -1;
+		let header: Ac3Header | null = null;
+		for (let p = 0; p + 6 <= probe.length; p++) {
+			const h = parseAc3Header(probe, p);
+			if (!h) {
+				continue;
+			}
+			const next = p + h.frameBytes;
+			if (next + 2 <= probe.length && (probe[next] !== 0x0b || probe[next + 1] !== 0x77)) {
+				continue;
+			}
+			first = p;
+			header = h;
+			break;
+		}
+		if (!header) {
+			return;
+		}
+
+		const layout: Ac3Layout = { chunks, starts, total, header };
+		let frameCount = Math.round((total - first) / header.avgFrameBytes);
+		if (frameCount > 0) {
+			const last = await this.readAc3Frame(layout, first + Math.round((frameCount - 1) * header.avgFrameBytes));
+			const h = parseAc3Header(last, 0);
+			if (!h || last.length < h.frameBytes) {
+				frameCount--;
+			}
+		}
+		const frameDur = AC3_SAMPLES_PER_FRAME / header.sampleRate;
+		const startSec = stream.rate > 0 ? stream.start * stream.scale / stream.rate : 0;
+		const frames: AviSample[] = [];
+		for (let k = 0; k < frameCount; k++) {
+			frames.push({
+				offset: 0,
+				size: header.frameBytes,
+				key: true,
+				timestamp: startSec + k * frameDur,
+				duration: frameDur,
+				sequenceNumber: k,
+				streamPos: first + Math.round(k * header.avgFrameBytes),
+			});
+		}
+		stream.ac3 = layout;
+		stream.samples = frames;
+		stream.sampleRate = header.sampleRate;
+	}
+
+	private async readAc3Frame(layout: Ac3Layout, nominal: number) {
+		const maxFrame = Math.ceil(layout.header.avgFrameBytes) + 2;
+		const windowStart = Math.max(0, nominal - AC3_RESYNC_WINDOW);
+		const buf = await this.readStreamBytes(layout, windowStart, nominal - windowStart + AC3_RESYNC_WINDOW + maxFrame + 2);
+		let best = -1;
+		let bestSize = 0;
+		let bestScore = Infinity;
+		for (let p = 0; p + 6 <= buf.length; p++) {
+			const h = parseAc3Header(buf, p);
+			if (!h || h.fscod !== layout.header.fscod) {
+				continue;
+			}
+			const next = p + h.frameBytes;
+			const verified = next + 2 <= buf.length && buf[next] === 0x0b && buf[next + 1] === 0x77;
+			const atEnd = windowStart + next === layout.total;
+			const score = Math.abs(windowStart + p - nominal) + (verified || atEnd ? 0 : AC3_RESYNC_WINDOW * 4);
+			if (score < bestScore) {
+				best = p;
+				bestSize = h.frameBytes;
+				bestScore = score;
+			}
+		}
+		if (best < 0) {
+			return buf.subarray(nominal - windowStart, nominal - windowStart + layout.header.frameBytes);
+		}
+		return buf.subarray(best, best + bestSize);
+	}
+
 	private buildTrackBackings() {
 		for (const stream of this.streams) {
 			if (stream.type === 'video' && stream.samples.length > 0) {
@@ -535,12 +691,18 @@ export class AviDemuxer extends Demuxer {
 		if (stream.formatTag === WAVE_FORMAT_MP3 || stream.formatTag === WAVE_FORMAT_MP3_ALT) {
 			return 'mp3';
 		}
+		if (stream.ac3) {
+			return 'ac3';
+		}
 		return null;
 	}
 
-	async readSampleData(sample: AviSample, options: PacketRetrievalOptions): Promise<Uint8Array> {
+	async readSampleData(stream: AviStream, sample: AviSample, options: PacketRetrievalOptions): Promise<Uint8Array> {
 		if (options.metadataOnly) {
 			return PLACEHOLDER_DATA;
+		}
+		if (stream.ac3 && sample.streamPos !== undefined) {
+			return await this.readAc3Frame(stream.ac3, sample.streamPos);
 		}
 		const s = await this.slice(sample.offset, sample.size);
 		assert(s);
@@ -574,7 +736,7 @@ const makePacket = (
 	if (!sample) {
 		return Promise.resolve(null);
 	}
-	return demuxer.readSampleData(sample, options).then(data => new EncodedPacket(
+	return demuxer.readSampleData(stream, sample, options).then(data => new EncodedPacket(
 		data,
 		sample.key ? 'key' : 'delta',
 		sample.timestamp,
